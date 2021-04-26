@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/dcrosby42/cedar
-  revision: d41b3a51b4ab96b82e456e23bcffeaf4231b5953
+  revision: 8a7cc963c658847be7a7113b5e2e828fcaa50bb5
   branch: main
   specs:
     cedar (0.1.0)
