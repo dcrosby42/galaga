@@ -50,6 +50,7 @@ module Galaga
         sparse: 2, # star sparsity (every n lines should be drawn)
         blink_rate: 1.5,
         blink_chance: 0.16,
+        debug: false,
       },
     })
     state
@@ -61,6 +62,9 @@ module Galaga
   end
 
   def update_stars(stars, input)
+    if input.keyboard.pressed?(Gosu::KB_1)
+      stars.debug = !stars.debug
+    end
     stars.loc += stars.speed * input.time.dt
     stars.t = input.time.t
   end
@@ -107,11 +111,26 @@ module Galaga
         end
 
         # For the sake of our procedural stars, we must always calc them all per page.
-        # But we need to clip them (avoid drawing out-of-bounds stars):
+        # But we need to clip them (avoid drawing out-of-bounds stars,
+        # preserving the score header and status footer):
         if y > stars.bounds.top and y < stars.bounds.bottom
           g << star(x, y, color) if color
         end
       end
+
+      if stars.debug
+        # Draw box around this page and label it:
+        x = stars.bounds.left + 1
+        y = page_start
+        w = stars.bounds.right - x - 1
+        h = page_height
+        color = Gosu::Color::WHITE
+        g << Draw::RectOutline.new(x: x, y: y, w: w, h: h, color: color)
+        g << Draw::Label.new(x: x, y: page_start, text: "pg #{pg}, rng: #{seed}", color: color)
+      end
+    end
+    if stars.debug
+      g << Draw::Label.new(x: 0, y: 20, text: "stars @ #{stars.loc}")
     end
   end
 
