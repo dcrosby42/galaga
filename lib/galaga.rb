@@ -52,6 +52,12 @@ module Galaga
         blink_chance: 0.16,
         debug: false,
       },
+      credits: 0,
+      high_score: 20000,
+      player: 0,
+      players: [open_struct(
+        score: 0,
+      )],
     })
     state
   end
@@ -72,9 +78,9 @@ module Galaga
   def draw(state, output, res)
     output.graphics << Draw::Scale.new(Scale) do |g|
       draw_stars g, state.stars
-      draw_start_info g
-      draw_bonuses g
-      draw_hud g
+      # draw_start_info g
+      # draw_bonuses g
+      draw_hud g, state
     end
   end
 
@@ -147,11 +153,13 @@ module Galaga
     )
   end
 
-  def draw_hud(g)
-    g << Draw::Label.new(text: "  1UP     HIGH SCORE", x: 0, y: 0, z: 100, color: Gosu::Color::RED, font: "retrogame")
-    g << Draw::Label.new(text: "  4010      20000   ", x: 0, y: 10, z: 100, color: Gosu::Color::WHITE, font: "retrogame")
+  def draw_hud(g, state)
+    player_name = "#{state.player + 1}UP"
+    player_score = state.players[state.player].score
+    g << Draw::Label.new(text: "  #{player_name}     HIGH SCORE", x: 0, y: 0, z: 100, color: Gosu::Color::RED, font: "retrogame")
+    g << Draw::Label.new(text: "  #{player_score.to_s.ljust(10, " ")}#{state.high_score}   ", x: 0, y: 10, z: 100, color: Gosu::Color::WHITE, font: "retrogame")
 
-    g << Draw::Label.new(text: " CREDITS 1", x: 0, y: 280, color: Gosu::Color::WHITE, font: "retrogame")
+    g << Draw::Label.new(text: " CREDITS #{state.credits}", x: 0, y: 280, color: Gosu::Color::WHITE, font: "retrogame")
   end
 
   def draw_bonuses(g)
