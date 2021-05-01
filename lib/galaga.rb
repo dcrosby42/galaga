@@ -41,6 +41,7 @@ module Galaga
   def new_state
     seed_rng = Cedar::Prng.new(1122334455)
     state = open_struct({
+      screen: :battle,
       seed_rng: seed_rng,
       stars: {
         bounds: { left: 0, top: 20, right: Width, bottom: Height - 15 },
@@ -56,7 +57,9 @@ module Galaga
       high_score: 20000,
       player: 0,
       players: [open_struct(
+        num: 1,
         score: 0,
+        pos: { x: 100, y: Height - 30 },
       )],
     })
     state
@@ -64,6 +67,12 @@ module Galaga
 
   def update(state, input, res)
     update_stars(state.stars, input)
+
+    case state.screen
+    when :battle
+      update_player(state.players[state.player], input)
+    end
+
     state
   end
 
@@ -75,11 +84,26 @@ module Galaga
     stars.t = input.time.t
   end
 
+  def update_player(player, input)
+    if input.keyboard.down?(Gosu::KB_LEFT)
+      player.pos.x -= 2
+    elsif input.keyboard.down?(Gosu::KB_RIGHT)
+      player.pos.x += 2
+    end
+  end
+
   def draw(state, output, res)
     output.graphics << Draw::Scale.new(Scale) do |g|
       draw_stars g, state.stars
-      # draw_start_info g
-      # draw_bonuses g
+
+      case state.screen
+      when :home_bonuses
+        draw_start_info g
+        draw_bonuses g
+      when :battle
+        draw_player g, state.players[state.player]
+      end
+
       draw_hud g, state
     end
   end
@@ -141,7 +165,7 @@ module Galaga
   end
 
   def star(x, y, color)
-    Draw::Rect.new(x: x, y: y, w: 1, h: 1, color: color)
+    Draw::Rect.new(x: x, y: y, w: 1, h: 1, color: color, z: 0)
   end
 
   def draw_start_info(g)
@@ -154,10 +178,9 @@ module Galaga
   end
 
   def draw_hud(g, state)
-    player_name = "#{state.player + 1}UP"
-    player_score = state.players[state.player].score
-    g << Draw::Label.new(text: "  #{player_name}     HIGH SCORE", x: 0, y: 0, z: 100, color: Gosu::Color::RED, font: "retrogame")
-    g << Draw::Label.new(text: "  #{player_score.to_s.ljust(10, " ")}#{state.high_score}   ", x: 0, y: 10, z: 100, color: Gosu::Color::WHITE, font: "retrogame")
+    player = state.players[state.player]
+    g << Draw::Label.new(text: "  #{player.num}UP     HIGH SCORE", x: 0, y: 0, z: 100, color: Gosu::Color::RED, font: "retrogame")
+    g << Draw::Label.new(text: "  #{player.score.to_s.ljust(10, " ")}#{state.high_score}   ", x: 0, y: 10, z: 100, color: Gosu::Color::WHITE, font: "retrogame")
 
     g << Draw::Label.new(text: " CREDITS #{state.credits}", x: 0, y: 280, color: Gosu::Color::WHITE, font: "retrogame")
   end
@@ -172,5 +195,9 @@ module Galaga
     g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 125)
     g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 145)
     g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 165)
+  end
+
+  def draw_player(g, player)
+    g << Draw::Image.new(path: "fighter_01.png", x: player.pos.x, y: player.pos.y, z: 50)
   end
 end
