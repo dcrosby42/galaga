@@ -6,9 +6,18 @@ end
 module Galaga
   extend self
 
+  Fire1Button = Gosu::KB_Q
+
   Scale = 2
   Width = 224
   Height = 288
+
+  HeaderHeight = 20
+  FooterHeight = 15
+
+  FighterSpeed = 120
+  MissileSpeed = 300
+  MissileFireLimit = 2
 
   StarColors = [
     Gosu::Color::GRAY,
@@ -44,7 +53,7 @@ module Galaga
       screen: :battle,
       seed_rng: seed_rng,
       stars: {
-        bounds: { left: 0, top: 20, right: Width, bottom: Height - 15 },
+        bounds: { left: 0, top: HeaderHeight, right: Width, bottom: Height - FooterHeight },
         loc: 0,
         speed: -40,
         star_seed: seed_rng.gen_seed,
@@ -60,6 +69,7 @@ module Galaga
         num: 1,
         score: 0,
         pos: { x: 100, y: Height - 30 },
+        missiles: [],
       )],
     })
     state
@@ -85,10 +95,45 @@ module Galaga
   end
 
   def update_player(player, input)
+    # Left/Right motion
     if input.keyboard.down?(Gosu::KB_LEFT)
-      player.pos.x -= 2
+      player.pos.x -= FighterSpeed * input.time.dt
     elsif input.keyboard.down?(Gosu::KB_RIGHT)
-      player.pos.x += 2
+      player.pos.x += FighterSpeed * input.time.dt
+    end
+    # contrain motion:
+    if player.pos.x > Width - 16
+      player.pos.x = Width - 16
+    elsif player.pos.x < 0
+      player.pos.x = 0
+    end
+
+    if input.keyboard.pressed?(Fire1Button)
+      if player.missiles.length < MissileFireLimit
+        # Fire missile
+        missile = open_struct(
+          pos: { x: player.pos.x + 6, y: player.pos.y },
+          vel: { x: 0, y: -MissileSpeed },
+        )
+        player.missiles << missile
+      end
+    end
+
+    update_missiles(player.missiles, input)
+  end
+
+  def update_missiles(missiles, input)
+    removals = nil
+    missiles.each.with_index do |missile, i|
+      missile.pos.y += missile.vel.y * input.time.dt
+      missile.pos.x += missile.vel.x * input.time.dt
+      if missile.pos.y < HeaderHeight || missile.pos.y > Height
+        removals ||= []
+        removals << i
+      end
+    end
+    removals && removals.each do |i|
+      missiles.delete_at i
     end
   end
 
@@ -199,5 +244,9 @@ module Galaga
 
   def draw_player(g, player)
     g << Draw::Image.new(path: "fighter_01.png", x: player.pos.x, y: player.pos.y, z: 50)
+
+    player.missiles.each do |missile|
+      g << Draw::Image.new(path: "missile_01.png", x: missile.pos.x, y: missile.pos.y, z: 49)
+    end
   end
 end
