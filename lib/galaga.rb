@@ -245,8 +245,14 @@ module Galaga
   def draw_player(g, player)
     g << Draw::Image.new(path: "fighter_01.png", x: player.pos.x, y: player.pos.y, z: 50)
 
-    player.missiles.each do |missile|
+    player.missiles.each.with_index do |missile, i|
       g << Draw::Image.new(path: "missile_01.png", x: missile.pos.x, y: missile.pos.y, z: 49)
+
+      # For Cedar to manage sounds over time, it tracks the lifecycle of any objects
+      # we send to the output.  For singular sounds, the resource path is good enough...
+      # but when we want to play/track multiple instances of the same sound at the same time,
+      # we should provide an :id to tell one "fire.wav" sound apart from another.
+      g << Sound::Effect.new(path: "fire.wav", id: "pm#{i}")
     end
   end
 end
