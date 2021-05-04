@@ -44,6 +44,18 @@ module Galaga
         name: "default",
         size: 10,
       },
+      {
+        type: "grid_sheet_sprite",
+        name: "enemy1",
+        image: "enemy_01.png",
+        grid: {
+          # x: 0, y: 0, w: 128, h: 16,
+          # x: 0, y: 0,
+          w: 16, h: 16,
+          count: 8, # 8 frames
+        # stride: 8, # all 8 in a row
+        },
+      },
     ]
   end
 
@@ -54,6 +66,7 @@ module Galaga
       seed_rng: seed_rng,
       stars: {
         bounds: { left: 0, top: HeaderHeight, right: Width, bottom: Height - FooterHeight },
+        t: 0,
         loc: 0,
         speed: -40,
         star_seed: seed_rng.gen_seed,
@@ -69,8 +82,21 @@ module Galaga
         num: 1,
         score: 0,
         pos: { x: 100, y: Height - 30 },
+        missiles_fired: 0,
         missiles: [],
       )],
+      enemies: [
+        open_struct(
+          t: 0.0,
+          sprite: "enemy1",
+          pos: { x: 50, y: HeaderHeight + 10 },
+        ),
+        open_struct(
+          t: 0.0,
+          sprite: "enemy1",
+          pos: { x: 66, y: HeaderHeight + 10 },
+        ),
+      ],
     })
     state
   end
@@ -81,6 +107,9 @@ module Galaga
     case state.screen
     when :battle
       update_player(state.players[state.player], input)
+      state.enemies.each do |enemy|
+        update_enemy(enemy, input)
+      end
     end
 
     state
@@ -111,7 +140,9 @@ module Galaga
     if input.keyboard.pressed?(Fire1Button)
       if player.missiles.length < MissileFireLimit
         # Fire missile
+        player.missiles_fired += 1
         missile = open_struct(
+          id: player.missiles_fired,
           pos: { x: player.pos.x + 6, y: player.pos.y },
           vel: { x: 0, y: -MissileSpeed },
         )
@@ -137,6 +168,10 @@ module Galaga
     end
   end
 
+  def update_enemy(enemy, input)
+    enemy.t = input.time.t
+  end
+
   def draw(state, output, res)
     output.graphics << Draw::Scale.new(Scale) do |g|
       draw_stars g, state.stars
@@ -147,6 +182,10 @@ module Galaga
         draw_bonuses g
       when :battle
         draw_player g, state.players[state.player]
+
+        state.enemies.each do |enemy|
+          draw_enemy g, enemy
+        end
       end
 
       draw_hud g, state
@@ -245,14 +284,15 @@ module Galaga
   def draw_player(g, player)
     g << Draw::Image.new(path: "fighter_01.png", x: player.pos.x, y: player.pos.y, z: 50)
 
-    player.missiles.each.with_index do |missile, i|
+    player.missiles.each do |missile|
       g << Draw::Image.new(path: "missile_01.png", x: missile.pos.x, y: missile.pos.y, z: 49)
-
-      # For Cedar to manage sounds over time, it tracks the lifecycle of any objects
-      # we send to the output.  For singular sounds, the resource path is good enough...
-      # but when we want to play/track multiple instances of the same sound at the same time,
-      # we should provide an :id to tell one "fire.wav" sound apart from another.
-      g << Sound::Effect.new(path: "fire.wav", id: "pm#{i}")
+      g << Sound::Effect.new(path: "fire.wav", id: missile.id)
     end
+  end
+
+  def draw_enemy(g, enemy)
+    flap_rate = 1.0
+    fr = 6 + ((enemy.t * flap_rate) % 2) # 6 is the first of two upright flap frames
+    g << Draw::Sprite.new(name: enemy.sprite, x: enemy.pos.x, y: enemy.pos.y, frame: fr)
   end
 end
