@@ -9,6 +9,9 @@ module Galaga
   Fire1Button = Gosu::KB_Q
   LeftButton = Gosu::KB_LEFT
   RightButton = Gosu::KB_RIGHT
+  DebugStarsToggle = Gosu::KB_1
+  DebugPlayerToggle = Gosu::KB_2
+  DebugEnemyToggle = Gosu::KB_3
 
   # Game dimensions
   Scale = 3
@@ -111,19 +114,22 @@ module Galaga
         pos: { x: 100, y: Height - 30 },
         missiles_fired: 0,
         missiles: [],
+        debug: true,
       )],
-      enemies: [
-        open_struct(
-          t: 0.0,
-          sprite: "enemy1",
-          pos: { x: 50, y: HeaderHeight + 10 },
-        ),
-        open_struct(
-          t: 0.0,
-          sprite: "enemy1",
-          pos: { x: 66, y: HeaderHeight + 10 },
-        ),
-      ],
+      enemy_fleet: {
+        t: 0.0,
+        enemies: [
+          open_struct(
+            sprite: "enemy1",
+            pos: { x: 50, y: HeaderHeight + 10 },
+          ),
+          open_struct(
+            sprite: "enemy1",
+            pos: { x: 66, y: HeaderHeight + 10 },
+          ),
+        ],
+        debug: true,
+      },
     })
     state
   end
@@ -133,21 +139,19 @@ module Galaga
 
     case state.screen
     when :battle
-      update_player(state.players[state.player], input)
-      state.enemies.each do |enemy|
-        update_enemy(enemy, input)
-      end
+      update_player state.players[state.player], input
+      update_enemy_fleet state.enemy_fleet, input
     end
 
     state
   end
 
   def update_stars(stars, input)
-    if input.keyboard.pressed?(Gosu::KB_1)
+    if input.keyboard.pressed?(DebugStarsToggle)
       stars.debug = !stars.debug
     end
     stars.loc += stars.speed * input.time.dt
-    stars.t = input.time.t
+    stars.t += input.time.dt
   end
 
   def update_player(player, input)
@@ -177,6 +181,10 @@ module Galaga
       end
     end
 
+    if input.keyboard.pressed?(DebugPlayerToggle)
+      player.debug = !player.debug
+    end
+
     update_missiles(player.missiles, input)
   end
 
@@ -195,8 +203,16 @@ module Galaga
     end
   end
 
-  def update_enemy(enemy, input)
-    enemy.t = input.time.t
+  def update_enemy_fleet(fleet, input)
+    if input.keyboard.pressed?(DebugEnemyToggle)
+      fleet.debug = !fleet.debug
+    end
+
+    fleet.t += input.time.dt
+
+    fleet.enemies.each do |enemy|
+      enemy.t = fleet.t
+    end
   end
 
   def draw(state, output, res)
@@ -210,11 +226,7 @@ module Galaga
       when :battle
         draw_player g, state.players[state.player]
 
-        state.enemies.each do |enemy|
-          draw_enemy g, enemy
-        end
-
-        g << Draw::Animation.new(name: "enemy_splode", t: state.stars.t, x: 0, y: 0)
+        draw_enemy_fleet g, state.enemy_fleet
       end
 
       draw_hud g, state
@@ -313,24 +325,50 @@ module Galaga
   def draw_player(g, player)
     g << Draw::Image.new(path: "fighter_01.png", x: player.pos.x, y: player.pos.y, z: Layer.player)
 
+    if player.debug
+      x = player.pos.x
+      y = player.pos.y
+      z = Layer.player_debug
+      c = Gosu::Color::YELLOW
+      g << Draw::Rect.new(x: x, y: y, z: z, color: c)
+      # g << Draw::RectOutline.new(x: x - 5, y: y - 5, w: 11, h: 10, z: z, color: c)
+      g << Draw::RectOutline.new(x: x, y: y, w: 15, h: 15, z: z, color: c)
+    end
+
     player.missiles.each do |missile|
       g << Draw::Image.new(path: "missile_01.png", x: missile.pos.x, y: missile.pos.y, z: Layer.player_missiles)
       # g << Sound::Effect.new(path: "fire.wav", id: missile.id)
+      if player.debug
+        x = missile.pos.x
+        y = missile.pos.y
+        z = Layer.player_debug
+        c = Gosu::Color::YELLOW
+        g << Draw::Rect.new(x: x, y: y, z: z, color: c)
+        g << Draw::RectOutline.new(x: x, y: y, w: 3, h: 3, z: z, color: c)
+      end
     end
   end
 
-  def draw_enemy(g, enemy)
+  def draw_enemy_fleet(g, fleet)
+    fleet.enemies.each do |enemy|
+      draw_enemy g, fleet, enemy
+    end
+    # DELETEME:
+    g << Draw::Animation.new(name: "enemy_splode", t: fleet.t, x: 0, y: 0)
+  end
+
+  def draw_enemy(g, fleet, enemy)
     flap_rate = 1.0
-    fr = 6 + ((enemy.t * flap_rate) % 2) # 6 is the first of two upright flap frames
+    fr = 6 + ((fleet.t * flap_rate) % 2) # 6 is the first of two upright flap frames
     g << Draw::Sprite.new(name: enemy.sprite, x: enemy.pos.x, y: enemy.pos.y, z: Layer.enemy, frame: fr)
 
-    begin
+    if fleet.debug
       x = enemy.pos.x
       y = enemy.pos.y
       z = Layer.enemy_debug
       c = Gosu::Color::CYAN
       g << Draw::Rect.new(x: x, y: y, z: z, color: c)
-      g << Draw::RectOutline.new(x: x - 5, y: y - 5, w: 10, h: 10, z: z, color: c)
+      g << Draw::RectOutline.new(x: x - 5, y: y - 5, w: 11, h: 10, z: z, color: c)
     end
   end
 end
