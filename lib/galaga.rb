@@ -7,8 +7,11 @@ module Galaga
   extend self
 
   Fire1Button = Gosu::KB_Q
+  LeftButton = Gosu::KB_LEFT
+  RightButton = Gosu::KB_RIGHT
 
-  Scale = 2
+  # Game dimensions
+  Scale = 3
   Width = 224
   Height = 288
 
@@ -30,6 +33,16 @@ module Galaga
     Gosu::Color::FUCHSIA,
     Gosu::Color::CYAN,
   ]
+  Layer = open_struct(
+    stars: 0,
+    enemy_fire: 99,
+    enemy: 100,
+    enemy_debug: 101,
+    player_missiles: 109,
+    player: 110,
+    player_debug: 111,
+    text: 150,
+  )
 
   def resource_config
     [
@@ -48,13 +61,27 @@ module Galaga
         type: "grid_sheet_sprite",
         name: "enemy1",
         image: "enemy_01.png",
+        center_x: 0.5,
+        center_y: 0.5,
         grid: {
-          # x: 0, y: 0, w: 128, h: 16,
-          # x: 0, y: 0,
           w: 16, h: 16,
-          count: 8, # 8 frames
-        # stride: 8, # all 8 in a row
+          count: 8,
         },
+      },
+      {
+        type: "grid_sheet_sprite",
+        name: "enemy_splode",
+        image: "enemy_splode.png",
+        grid: {
+          w: 32, h: 32,
+          count: 5,
+        },
+      },
+      {
+        type: "sprite_animation",
+        name: "enemy_splode",
+        sprite: "enemy_splode",
+        fps: 24,
       },
     ]
   end
@@ -125,9 +152,9 @@ module Galaga
 
   def update_player(player, input)
     # Left/Right motion
-    if input.keyboard.down?(Gosu::KB_LEFT)
+    if input.keyboard.down?(LeftButton)
       player.pos.x -= FighterSpeed * input.time.dt
-    elsif input.keyboard.down?(Gosu::KB_RIGHT)
+    elsif input.keyboard.down?(RightButton)
       player.pos.x += FighterSpeed * input.time.dt
     end
     # contrain motion:
@@ -186,6 +213,8 @@ module Galaga
         state.enemies.each do |enemy|
           draw_enemy g, enemy
         end
+
+        g << Draw::Animation.new(name: "enemy_splode", t: state.stars.t, x: 0, y: 0)
       end
 
       draw_hud g, state
@@ -249,13 +278,13 @@ module Galaga
   end
 
   def star(x, y, color)
-    Draw::Rect.new(x: x, y: y, w: 1, h: 1, color: color, z: 0)
+    Draw::Rect.new(x: x, y: y, w: 1, h: 1, color: color, z: Layer.stars)
   end
 
   def draw_start_info(g)
     g << Draw::Label.new(
       text: "PUSH START BUTTON",
-      x: 40, y: 100, z: 100,
+      x: 40, y: 100, z: Layer.text,
       color: Gosu::Color.new(0, 228, 202),
       font: "retrogame",
     )
@@ -263,36 +292,45 @@ module Galaga
 
   def draw_hud(g, state)
     player = state.players[state.player]
-    g << Draw::Label.new(text: "  #{player.num}UP     HIGH SCORE", x: 0, y: 0, z: 100, color: Gosu::Color::RED, font: "retrogame")
-    g << Draw::Label.new(text: "  #{player.score.to_s.ljust(10, " ")}#{state.high_score}   ", x: 0, y: 10, z: 100, color: Gosu::Color::WHITE, font: "retrogame")
+    g << Draw::Label.new(text: "  #{player.num}UP     HIGH SCORE", x: 0, y: 0, z: Layer.text, color: Gosu::Color::RED, font: "retrogame")
+    g << Draw::Label.new(text: "  #{player.score.to_s.ljust(10, " ")}#{state.high_score}   ", x: 0, y: 10, z: Layer.text, color: Gosu::Color::WHITE, font: "retrogame")
 
     g << Draw::Label.new(text: " CREDITS #{state.credits}", x: 0, y: 280, color: Gosu::Color::WHITE, font: "retrogame")
   end
 
   def draw_bonuses(g)
-    g << Draw::Label.new(text: "1ST BONUS FOR 20000 PTS", x: 25, y: 130, z: 100, color: Gosu::Color::YELLOW, font: "retrogame")
-    g << Draw::Label.new(text: "2ND BONUS FOR 70000 PTS", x: 25, y: 150, z: 100, color: Gosu::Color::YELLOW, font: "retrogame")
-    g << Draw::Label.new(text: "AND FOR EVERY 70000 PTS", x: 25, y: 170, z: 100, color: Gosu::Color::YELLOW, font: "retrogame")
+    g << Draw::Label.new(text: "1ST BONUS FOR 20000 PTS", x: 25, y: 130, z: Layer.text, color: Gosu::Color::YELLOW, font: "retrogame")
+    g << Draw::Label.new(text: "2ND BONUS FOR 70000 PTS", x: 25, y: 150, z: Layer.text, color: Gosu::Color::YELLOW, font: "retrogame")
+    g << Draw::Label.new(text: "AND FOR EVERY 70000 PTS", x: 25, y: 170, z: Layer.text, color: Gosu::Color::YELLOW, font: "retrogame")
 
-    g << Draw::Label.new(text: "\u00A9 1981 NAMCO LTD.", x: 40, y: 210, z: 100, color: Gosu::Color::WHITE, font: "retrogame")
+    g << Draw::Label.new(text: "\u00A9 1981 NAMCO LTD.", x: 40, y: 210, z: Layer.text, color: Gosu::Color::WHITE, font: "retrogame")
 
-    g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 125)
-    g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 145)
-    g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 165)
+    g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 125, z: Layer.text)
+    g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 145, z: Layer.text)
+    g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 165, z: Layer.text)
   end
 
   def draw_player(g, player)
-    g << Draw::Image.new(path: "fighter_01.png", x: player.pos.x, y: player.pos.y, z: 50)
+    g << Draw::Image.new(path: "fighter_01.png", x: player.pos.x, y: player.pos.y, z: Layer.player)
 
     player.missiles.each do |missile|
-      g << Draw::Image.new(path: "missile_01.png", x: missile.pos.x, y: missile.pos.y, z: 49)
-      g << Sound::Effect.new(path: "fire.wav", id: missile.id)
+      g << Draw::Image.new(path: "missile_01.png", x: missile.pos.x, y: missile.pos.y, z: Layer.player_missiles)
+      # g << Sound::Effect.new(path: "fire.wav", id: missile.id)
     end
   end
 
   def draw_enemy(g, enemy)
     flap_rate = 1.0
     fr = 6 + ((enemy.t * flap_rate) % 2) # 6 is the first of two upright flap frames
-    g << Draw::Sprite.new(name: enemy.sprite, x: enemy.pos.x, y: enemy.pos.y, frame: fr)
+    g << Draw::Sprite.new(name: enemy.sprite, x: enemy.pos.x, y: enemy.pos.y, z: Layer.enemy, frame: fr)
+
+    begin
+      x = enemy.pos.x
+      y = enemy.pos.y
+      z = Layer.enemy_debug
+      c = Gosu::Color::CYAN
+      g << Draw::Rect.new(x: x, y: y, z: z, color: c)
+      g << Draw::RectOutline.new(x: x - 5, y: y - 5, w: 10, h: 10, z: z, color: c)
+    end
   end
 end
