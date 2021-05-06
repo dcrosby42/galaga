@@ -9,9 +9,11 @@ module Galaga
   Fire1Button = Gosu::KB_Q
   LeftButton = Gosu::KB_LEFT
   RightButton = Gosu::KB_RIGHT
+
   DebugStarsToggle = Gosu::KB_1
   DebugPlayerToggle = Gosu::KB_2
   DebugEnemyToggle = Gosu::KB_3
+  PauseToggle = Gosu::KB_P
 
   # Game dimensions
   Scale = 3
@@ -94,6 +96,7 @@ module Galaga
     state = open_struct({
       screen: :battle,
       seed_rng: seed_rng,
+      paused: false,
       stars: {
         bounds: { left: 0, top: HeaderHeight, right: Width, bottom: Height - FooterHeight },
         t: 0,
@@ -135,6 +138,22 @@ module Galaga
   end
 
   def update(state, input, res)
+    if input.keyboard.pressed?(PauseToggle)
+      state.paused = !state.paused
+    end
+    if input.keyboard.pressed?(DebugPlayerToggle)
+      pl = state.players[state.player]
+      pl.debug = !pl.debug
+    end
+    if input.keyboard.pressed?(DebugStarsToggle)
+      state.stars.debug = !state.stars.debug
+    end
+    if input.keyboard.pressed?(DebugEnemyToggle)
+      state.enemy_fleet.debug = !state.enemy_fleet.debug
+    end
+
+    return state if state.paused
+
     update_stars(state.stars, input)
 
     case state.screen
@@ -147,9 +166,6 @@ module Galaga
   end
 
   def update_stars(stars, input)
-    if input.keyboard.pressed?(DebugStarsToggle)
-      stars.debug = !stars.debug
-    end
     stars.loc += stars.speed * input.time.dt
     stars.t += input.time.dt
   end
@@ -181,10 +197,6 @@ module Galaga
       end
     end
 
-    if input.keyboard.pressed?(DebugPlayerToggle)
-      player.debug = !player.debug
-    end
-
     update_missiles(player.missiles, input)
   end
 
@@ -204,14 +216,10 @@ module Galaga
   end
 
   def update_enemy_fleet(fleet, input)
-    if input.keyboard.pressed?(DebugEnemyToggle)
-      fleet.debug = !fleet.debug
-    end
-
     fleet.t += input.time.dt
 
     fleet.enemies.each do |enemy|
-      enemy.t = fleet.t
+      # enemy.t = fleet.t
     end
   end
 
@@ -336,15 +344,19 @@ module Galaga
     end
 
     player.missiles.each do |missile|
-      g << Draw::Image.new(path: "missile_01.png", x: missile.pos.x, y: missile.pos.y, z: Layer.player_missiles)
+      g << Draw::Image.new(
+        path: "missile_01.png",
+        x: missile.pos.x, y: missile.pos.y, z: Layer.player_missiles,
+        center_x: 0.5, center_y: 0,
+      )
       # g << Sound::Effect.new(path: "fire.wav", id: missile.id)
       if player.debug
         x = missile.pos.x
         y = missile.pos.y
         z = Layer.player_debug
         c = Gosu::Color::YELLOW
-        g << Draw::Rect.new(x: x, y: y, z: z, color: c)
-        g << Draw::RectOutline.new(x: x, y: y, w: 3, h: 3, z: z, color: c)
+        # g << Draw::Rect.new(x: x - 0.5, y: y, z: z, w: 1, h: 2, color: c)
+        g << Draw::RectOutline.new(x: x - 1, y: y, w: 3, h: 3, z: z, color: c)
       end
     end
   end
