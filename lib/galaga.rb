@@ -88,6 +88,12 @@ module Galaga
         sprite: "enemy_splode",
         fps: 24,
       },
+      {
+        type: "sound",
+        name: "pew",
+        sound: "fire.wav",
+        volume: 0.1,
+      },
     ]
   end
 
@@ -349,7 +355,10 @@ module Galaga
         x: missile.pos.x, y: missile.pos.y, z: Layer.player_missiles,
         center_x: 0.5, center_y: 0,
       )
-      # g << Sound::Effect.new(path: "fire.wav", id: missile.id)
+
+      # g << Sound::Effect.new(name: "fire.wav", id: missile.id)
+      g << Sound::Effect.new(name: "pew", id: missile.id)
+
       if player.debug
         x = missile.pos.x
         y = missile.pos.y
