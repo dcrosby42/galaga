@@ -16,7 +16,7 @@ module Galaga
   PauseToggle = Gosu::KB_P
 
   # Game dimensions
-  Scale = 2
+  Scale = 3
   Width = 224
   Height = 288
 
@@ -81,6 +81,8 @@ module Galaga
           w: 32, h: 32,
           count: 5,
         },
+        center_x: 0.5,
+        center_y: 0.5,
       },
       {
         type: "sprite_animation",
@@ -93,6 +95,12 @@ module Galaga
         name: "pew",
         sound: "fire.wav",
         volume: 0.1,
+      },
+      {
+        type: "sound",
+        name: "boom",
+        sound: "boom.wav",
+        volume: 0.5,
       },
     ]
   end
@@ -116,25 +124,32 @@ module Galaga
       },
       credits: 0,
       high_score: 20000,
-      player: 0,
-      players: [open_struct(
+      player: {
         num: 1,
         score: 0,
         pos: { x: 100, y: Height - 30 },
         missiles_fired: 0,
         missiles: [],
         debug: true,
-      )],
+      },
       enemy_fleet: {
         t: 0.0,
         enemies: [
           open_struct(
+            id: 1,
             sprite: "enemy1",
+            mode: :active,
             pos: { x: 50, y: HeaderHeight + 10 },
+            hit_box: { x: 0, y: 0, w: 11, h: 10 },
+            hit_by: [],
           ),
           open_struct(
+            id: 2,
             sprite: "enemy1",
+            mode: :active,
             pos: { x: 66, y: HeaderHeight + 10 },
+            hit_box: { x: 0, y: 0, w: 11, h: 10 },
+            hit_by: [],
           ),
         ],
         debug: true,
@@ -148,8 +163,7 @@ module Galaga
       state.paused = !state.paused
     end
     if input.keyboard.pressed?(DebugPlayerToggle)
-      pl = state.players[state.player]
-      pl.debug = !pl.debug
+      state.player.debug = !state.player.debug
     end
     if input.keyboard.pressed?(DebugStarsToggle)
       state.stars.debug = !state.stars.debug
@@ -164,7 +178,8 @@ module Galaga
 
     case state.screen
     when :battle
-      update_player state.players[state.player], input
+      update_collisions state
+      update_player state.player, input
       update_enemy_fleet state.enemy_fleet, input
     end
 
@@ -198,6 +213,7 @@ module Galaga
           id: player.missiles_fired,
           pos: { x: player.pos.x + 6, y: player.pos.y },
           vel: { x: 0, y: -MissileSpeed },
+          hitting: [],
         )
         player.missiles << missile
       end
@@ -212,6 +228,7 @@ module Galaga
       missile.pos.y += missile.vel.y * input.time.dt
       missile.pos.x += missile.vel.x * input.time.dt
       if missile.pos.y < HeaderHeight || missile.pos.y > Height
+        # missile out of range; mark for deletion
         removals ||= []
         removals << i
       end
@@ -224,8 +241,48 @@ module Galaga
   def update_enemy_fleet(fleet, input)
     fleet.t += input.time.dt
 
-    fleet.enemies.each do |enemy|
-      # enemy.t = fleet.t
+    destroyed = []
+
+    fleet.enemies.each.with_index do |enemy, i|
+      if !enemy.hit_by.empty?
+        enemy.mode = :explode
+      end
+
+      if enemy.mode == :active
+        enemy.hit_box.x = enemy.pos.x - 5
+        enemy.hit_box.y = enemy.pos.y - 5
+      elsif enemy.mode == :explode
+        if !enemy.explosion
+          # start the explosion
+          enemy.explosion = open_struct(t: 0, done: 1.0 / 24 * 5) # ~ four (+1 extra, for safety) frames @ 24 fps
+        else
+          # update the explosion
+          enemy.explosion.t += input.time.dt
+          if enemy.explosion.t >= enemy.explosion.done
+            destroyed << i
+          end
+        end
+      end
+
+      destroyed.each do |i|
+        fleet.enemies.delete_at i
+      end
+    end
+  end
+
+  def update_collisions(state)
+    state.enemy_fleet.enemies.each do |enemy|
+      enemy.hit_by.clear
+    end
+
+    state.player.missiles.each do |missile|
+      missile.hitting.clear
+      state.enemy_fleet.enemies.each do |enemy|
+        if point_in_rect(missile.pos, enemy.hit_box)
+          enemy.hit_by << missile
+          missile.hitting << enemy
+        end
+      end
     end
   end
 
@@ -238,7 +295,7 @@ module Galaga
         draw_start_info g
         draw_bonuses g
       when :battle
-        draw_player g, state.players[state.player]
+        draw_player g, state.player
 
         draw_enemy_fleet g, state.enemy_fleet
       end
@@ -317,7 +374,7 @@ module Galaga
   end
 
   def draw_hud(g, state)
-    player = state.players[state.player]
+    player = state.player
     g << Draw::Label.new(text: "  #{player.num}UP     HIGH SCORE", x: 0, y: 0, z: Layer.text, color: Gosu::Color::RED, font: "retrogame")
     g << Draw::Label.new(text: "  #{player.score.to_s.ljust(10, " ")}#{state.high_score}   ", x: 0, y: 10, z: Layer.text, color: Gosu::Color::WHITE, font: "retrogame")
 
@@ -356,7 +413,6 @@ module Galaga
         center_x: 0.5, center_y: 0,
       )
 
-      # g << Sound::Effect.new(name: "fire.wav", id: missile.id)
       g << Sound::Effect.new(name: "pew", id: missile.id)
 
       if player.debug
@@ -364,8 +420,8 @@ module Galaga
         y = missile.pos.y
         z = Layer.player_debug
         c = Gosu::Color::YELLOW
-        g << Draw::Rect.new(x: x, y: y, z: z, w: 1, h: 2, color: c)
-        g << Draw::RectOutline.new(x: x - 1, y: y, w: 3, h: 3, z: z, color: c)
+        g << Draw::Rect.new(x: x, y: y, z: z, w: 1, h: 1, color: c)
+        # g << Draw::RectOutline.new(x: x - 1, y: y, w: 3, h: 3, z: z, color: c)
       end
     end
   end
@@ -392,21 +448,31 @@ module Galaga
       draw_enemy g, fleet, enemy
     end
     # DELETEME:
-    g << Draw::Animation.new(name: "enemy_splode", t: fleet.t, x: 0, y: 0)
   end
 
   def draw_enemy(g, fleet, enemy)
-    flap_rate = 1.0
-    fr = 6 + ((fleet.t * flap_rate) % 2) # 6 is the first of two upright flap frames
-    g << Draw::Sprite.new(name: enemy.sprite, x: enemy.pos.x, y: enemy.pos.y, z: Layer.enemy, frame: fr)
+    if enemy.mode == :active
+      flap_rate = 1.0
+      fr = 6 + ((fleet.t * flap_rate) % 2) # 6 is the first of two upright flap frames
+      g << Draw::Sprite.new(name: enemy.sprite, x: enemy.pos.x, y: enemy.pos.y, z: Layer.enemy, frame: fr)
 
-    if fleet.debug
-      x = enemy.pos.x
-      y = enemy.pos.y
-      z = Layer.enemy_debug
-      c = Gosu::Color::CYAN
-      g << Draw::Rect.new(x: x, y: y, z: z, color: c)
-      g << Draw::RectOutline.new(x: x - 5, y: y - 5, w: 11, h: 10, z: z, color: c)
+      if fleet.debug
+        x = enemy.pos.x
+        y = enemy.pos.y
+        z = Layer.enemy_debug
+        c = Gosu::Color::CYAN
+        c = Gosu::Color::RED if !enemy.hit_by.empty?
+
+        g << Draw::Rect.new(x: x, y: y, z: z, color: c)
+        # g << Draw::RectOutline.new(x: x - 5, y: y - 5, w: 11, h: 10, z: z, color: c)
+        g << Draw::RectOutline.new(x: enemy.hit_box.x, y: enemy.hit_box.y, w: enemy.hit_box.w, h: enemy.hit_box.h, z: z, color: c)
+      end
+    elsif enemy.mode == :explode
+      g << Draw::Animation.new(name: "enemy_splode", t: enemy.explosion.t, x: enemy.pos.x, y: enemy.pos.y)
+      g << Sound::Effect.new(name: "boom", id: enemy.id)
     end
+
+    # g << Draw::Animation.new(name: "enemy_splode", t: fleet.t, x: 0, y: 0)
+
   end
 end
