@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/dcrosby42/cedar
-  revision: c0b162c17700f5cc45b098ad1d11c927e3aa176b
+  revision: 2928ae1a9c0c7d14a80d6651ec144b80d772dbac
   branch: main
   specs:
     cedar (0.1.0)
@@ -10,7 +10,7 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (6.1.3.1)
+    activesupport (6.1.3.2)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)

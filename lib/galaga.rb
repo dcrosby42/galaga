@@ -16,7 +16,7 @@ module Galaga
   PauseToggle = Gosu::KB_P
 
   # Game dimensions
-  Scale = 3
+  Scale = 2
   Width = 224
   Height = 288
 
@@ -364,11 +364,28 @@ module Galaga
         y = missile.pos.y
         z = Layer.player_debug
         c = Gosu::Color::YELLOW
-        # g << Draw::Rect.new(x: x - 0.5, y: y, z: z, w: 1, h: 2, color: c)
+        g << Draw::Rect.new(x: x, y: y, z: z, w: 1, h: 2, color: c)
         g << Draw::RectOutline.new(x: x - 1, y: y, w: 3, h: 3, z: z, color: c)
       end
     end
   end
+
+  def point_in_rect(pt, rect)
+    pt.x >= rect.x &&
+      pt.x <= rect.x + rect.w &&
+      pt.y >= rect.y &&
+      pt.y <= rect.y + rect.h
+  end
+
+  # def rectangle_hit()
+  #   if (r1x + r1w >= r2x &&     // r1 right edge past r2 left
+  #     r1x <= r2x + r2w &&       // r1 left edge past r2 right
+  #     r1y + r1h >= r2y &&       // r1 top edge past r2 bottom
+  #     r1y <= r2y + r2h) {       // r1 bottom edge past r2 top
+  #       return true;
+  #   }
+  #   return false;
+  # end
 
   def draw_enemy_fleet(g, fleet)
     fleet.enemies.each do |enemy|
