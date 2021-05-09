@@ -1,10 +1,11 @@
-module Galaga
-  include Cedar
-  extend Cedar::Helpers
-end
+require "geom"
 
 module Galaga
   extend self
+  include Cedar
+  extend Cedar::Helpers
+  include Geom
+  extend Geom
 
   Fire1Button = Gosu::KB_Q
   LeftButton = Gosu::KB_LEFT
@@ -48,6 +49,12 @@ module Galaga
     player_debug: 111,
     text: 150,
   )
+end
+
+require "enemies"
+
+module Galaga
+  Cedar::Sound.on = false
 
   def resource_config
     [
@@ -121,7 +128,7 @@ module Galaga
         bounds: { left: 0, top: HeaderHeight, right: Width, bottom: Height - FooterHeight },
         t: 0,
         loc: 0,
-        speed: -40,
+        speed: -60,
         star_seed: seed_rng.gen_seed,
         sparse: 2, # star sparsity (every n lines should be drawn)
         blink_rate: 1.5,
@@ -136,30 +143,9 @@ module Galaga
         pos: { x: 100, y: Height - 30 },
         missiles_fired: 0,
         missiles: [],
-        debug: true,
+        debug: false,
       },
-      enemy_fleet: {
-        t: 0.0,
-        enemies: [
-          open_struct(
-            id: 1,
-            sprite: "enemy1",
-            mode: :active,
-            pos: { x: 50, y: HeaderHeight + 10 },
-            hit_box: { x: 0, y: 0, w: 11, h: 10 },
-            collisions: [],
-          ),
-          open_struct(
-            id: 2,
-            sprite: "enemy1",
-            mode: :active,
-            pos: { x: 66, y: 15 + HeaderHeight + 10 },
-            hit_box: { x: 0, y: 0, w: 11, h: 10 },
-            collisions: [],
-          ),
-        ],
-        debug: true,
-      },
+      enemy_fleet: new_enemy_fleet,
     })
     state
   end
@@ -247,39 +233,6 @@ module Galaga
     end
     removals && removals.each do |i|
       missiles.delete_at i
-    end
-  end
-
-  def update_enemy_fleet(fleet, input)
-    fleet.t += input.time.dt
-
-    destroyed = []
-
-    fleet.enemies.each.with_index do |enemy, i|
-      if !enemy.collisions.empty?
-        enemy.mode = :explode
-      end
-
-      if enemy.mode == :active
-        enemy.hit_box.x = enemy.pos.x - 5
-        enemy.hit_box.y = enemy.pos.y - 5
-      elsif enemy.mode == :explode
-        if !enemy.explosion
-          # start the explosion
-          # enemy.explosion = open_struct(t: 0, limit: 1.0 / 24 * 5) # ~ four (+1 extra, for safety) frames @ 24 fps
-          enemy.explosion = open_struct(t: 0, limit: 1) # ~ four (+1 extra, for safety) frames @ 24 fps
-        else
-          # update the explosion
-          enemy.explosion.t += input.time.dt
-          if enemy.explosion.t >= enemy.explosion.limit
-            destroyed << i
-          end
-        end
-      end
-
-      destroyed.each do |i|
-        fleet.enemies.delete_at i
-      end
     end
   end
 
@@ -438,55 +391,5 @@ module Galaga
         # g << Draw::RectOutline.new(x: x - 1, y: y, w: 3, h: 3, z: z, color: c)
       end
     end
-  end
-
-  def point_in_rect(pt, rect)
-    pt.x >= rect.x &&
-      pt.x <= rect.x + rect.w &&
-      pt.y >= rect.y &&
-      pt.y <= rect.y + rect.h
-  end
-
-  # def rectangle_hit()
-  #   if (r1x + r1w >= r2x &&     // r1 right edge past r2 left
-  #     r1x <= r2x + r2w &&       // r1 left edge past r2 right
-  #     r1y + r1h >= r2y &&       // r1 top edge past r2 bottom
-  #     r1y <= r2y + r2h) {       // r1 bottom edge past r2 top
-  #       return true;
-  #   }
-  #   return false;
-  # end
-
-  def draw_enemy_fleet(g, fleet)
-    fleet.enemies.each do |enemy|
-      draw_enemy g, fleet, enemy
-    end
-    # DELETEME:
-  end
-
-  def draw_enemy(g, fleet, enemy)
-    if enemy.mode == :active
-      flap_rate = 1.0
-      fr = 6 + ((fleet.t * flap_rate) % 2) # 6 is the first of two upright flap frames
-      g << Draw::Sprite.new(name: enemy.sprite, x: enemy.pos.x, y: enemy.pos.y, z: Layer.enemy, frame: fr)
-
-      if fleet.debug
-        x = enemy.pos.x
-        y = enemy.pos.y
-        z = Layer.enemy_debug
-        c = Gosu::Color::CYAN
-        c = Gosu::Color::RED if !enemy.collisions.empty?
-
-        g << Draw::Rect.new(x: x, y: y, z: z, color: c)
-        # g << Draw::RectOutline.new(x: x - 5, y: y - 5, w: 11, h: 10, z: z, color: c)
-        g << Draw::RectOutline.new(x: enemy.hit_box.x, y: enemy.hit_box.y, w: enemy.hit_box.w, h: enemy.hit_box.h, z: z, color: c)
-      end
-    elsif enemy.mode == :explode
-      g << Draw::Animation.new(name: "enemy_splode", t: enemy.explosion.t, x: enemy.pos.x, y: enemy.pos.y)
-      g << Sound::Effect.new(name: "waka", id: enemy.id)
-    end
-
-    # g << Draw::Animation.new(name: "enemy_splode", t: fleet.t, x: 0, y: 0)
-
   end
 end
