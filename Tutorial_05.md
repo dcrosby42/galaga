@@ -8,3 +8,6 @@ New stuff:
 - Splosions
 
 Changes:
+- Sound
+- Debug controls
+- Bounding boxes

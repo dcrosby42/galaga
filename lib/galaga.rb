@@ -94,12 +94,18 @@ module Galaga
         type: "sound",
         name: "pew",
         sound: "fire.wav",
-        volume: 0.1,
+        volume: 0.5,
       },
       {
         type: "sound",
         name: "boom",
         sound: "boom.wav",
+        volume: 0.5,
+      },
+      {
+        type: "sound",
+        name: "waka",
+        sound: "enemy_hit_01.wav",
         volume: 0.5,
       },
     ]
@@ -141,15 +147,15 @@ module Galaga
             mode: :active,
             pos: { x: 50, y: HeaderHeight + 10 },
             hit_box: { x: 0, y: 0, w: 11, h: 10 },
-            hit_by: [],
+            collisions: [],
           ),
           open_struct(
             id: 2,
             sprite: "enemy1",
             mode: :active,
-            pos: { x: 66, y: HeaderHeight + 10 },
+            pos: { x: 66, y: 15 + HeaderHeight + 10 },
             hit_box: { x: 0, y: 0, w: 11, h: 10 },
-            hit_by: [],
+            collisions: [],
           ),
         ],
         debug: true,
@@ -211,9 +217,9 @@ module Galaga
         player.missiles_fired += 1
         missile = open_struct(
           id: player.missiles_fired,
-          pos: { x: player.pos.x + 6, y: player.pos.y },
+          pos: { x: player.pos.x + 7.5, y: player.pos.y },
           vel: { x: 0, y: -MissileSpeed },
-          hitting: [],
+          collisions: [],
         )
         player.missiles << missile
       end
@@ -225,12 +231,18 @@ module Galaga
   def update_missiles(missiles, input)
     removals = nil
     missiles.each.with_index do |missile, i|
-      missile.pos.y += missile.vel.y * input.time.dt
-      missile.pos.x += missile.vel.x * input.time.dt
-      if missile.pos.y < HeaderHeight || missile.pos.y > Height
-        # missile out of range; mark for deletion
+      if missile.collisions.length > 0
+        # missile hit something
         removals ||= []
         removals << i
+      else
+        missile.pos.y += missile.vel.y * input.time.dt
+        missile.pos.x += missile.vel.x * input.time.dt
+        if missile.pos.y < HeaderHeight || missile.pos.y > Height
+          # missile out of range; mark for deletion
+          removals ||= []
+          removals << i
+        end
       end
     end
     removals && removals.each do |i|
@@ -244,7 +256,7 @@ module Galaga
     destroyed = []
 
     fleet.enemies.each.with_index do |enemy, i|
-      if !enemy.hit_by.empty?
+      if !enemy.collisions.empty?
         enemy.mode = :explode
       end
 
@@ -254,11 +266,12 @@ module Galaga
       elsif enemy.mode == :explode
         if !enemy.explosion
           # start the explosion
-          enemy.explosion = open_struct(t: 0, done: 1.0 / 24 * 5) # ~ four (+1 extra, for safety) frames @ 24 fps
+          # enemy.explosion = open_struct(t: 0, limit: 1.0 / 24 * 5) # ~ four (+1 extra, for safety) frames @ 24 fps
+          enemy.explosion = open_struct(t: 0, limit: 1) # ~ four (+1 extra, for safety) frames @ 24 fps
         else
           # update the explosion
           enemy.explosion.t += input.time.dt
-          if enemy.explosion.t >= enemy.explosion.done
+          if enemy.explosion.t >= enemy.explosion.limit
             destroyed << i
           end
         end
@@ -272,15 +285,16 @@ module Galaga
 
   def update_collisions(state)
     state.enemy_fleet.enemies.each do |enemy|
-      enemy.hit_by.clear
+      enemy.collisions.clear
     end
 
     state.player.missiles.each do |missile|
-      missile.hitting.clear
       state.enemy_fleet.enemies.each do |enemy|
         if point_in_rect(missile.pos, enemy.hit_box)
-          enemy.hit_by << missile
-          missile.hitting << enemy
+          # HIT!
+          enemy.collisions << missile
+          missile.collisions << enemy
+          state.player.score += 80
         end
       end
     end
@@ -461,7 +475,7 @@ module Galaga
         y = enemy.pos.y
         z = Layer.enemy_debug
         c = Gosu::Color::CYAN
-        c = Gosu::Color::RED if !enemy.hit_by.empty?
+        c = Gosu::Color::RED if !enemy.collisions.empty?
 
         g << Draw::Rect.new(x: x, y: y, z: z, color: c)
         # g << Draw::RectOutline.new(x: x - 5, y: y - 5, w: 11, h: 10, z: z, color: c)
@@ -469,7 +483,7 @@ module Galaga
       end
     elsif enemy.mode == :explode
       g << Draw::Animation.new(name: "enemy_splode", t: enemy.explosion.t, x: enemy.pos.x, y: enemy.pos.y)
-      g << Sound::Effect.new(name: "boom", id: enemy.id)
+      g << Sound::Effect.new(name: "waka", id: enemy.id)
     end
 
     # g << Draw::Animation.new(name: "enemy_splode", t: fleet.t, x: 0, y: 0)
