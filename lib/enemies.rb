@@ -50,6 +50,11 @@ module Galaga
       end
 
       if enemy.mode == :active
+        enemy.pos.y += 1
+        if enemy.pos.y > Height
+          enemy.pos.y = 0
+        end
+
         # update hitbox location
         enemy.hit_box.x = enemy.pos.x - 5
         enemy.hit_box.y = enemy.pos.y - 5
@@ -109,9 +114,4 @@ module Galaga
       g << Sound::Effect.new(name: "waka", id: enemy.id)
     end
   end
-
-  # strategy
-  # update enemy fleet
-  # draw enemy fleet
-
 end
