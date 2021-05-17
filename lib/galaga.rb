@@ -56,7 +56,7 @@ require "enemies"
 require "stars"
 
 module Galaga
-  Cedar::Sound.on = false
+  Cedar::Sound.on = true
 
   def resource_config
     [
@@ -114,7 +114,7 @@ module Galaga
         type: "sprite_animation",
         name: "player_splode",
         sprite: "player_splode",
-        fps: 24,
+        fps: 5,
       },
       {
         type: "sound",
@@ -186,6 +186,7 @@ module Galaga
     end
     state.player.collisions.clear
 
+    # Player missiles v enemies
     state.player.missiles.each do |missile|
       state.enemy_fleet.enemies.each do |enemy|
         if point_in_rect(missile.pos, enemy.hit_box)
@@ -197,6 +198,7 @@ module Galaga
       end
     end
 
+    # Enemies v player
     state.enemy_fleet.enemies.each do |enemy|
       if enemy.mode == :active
         if rect_overlap(enemy.hit_box, state.player.hit_box)

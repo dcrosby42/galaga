@@ -3,6 +3,7 @@ module Galaga
     {
       num: 1,
       score: 0,
+      mode: :active,
       pos: { x: 100, y: Height - 30 },
       hit_box: { x: 0, y: 0, w: 15, h: 15 },
       missiles_fired: 0,
@@ -87,34 +88,42 @@ module Galaga
   end
 
   def draw_player(g, player)
-    g << Draw::Image.new(path: "fighter_01.png", x: player.pos.x, y: player.pos.y, z: Layer.player)
-
-    if player.debug
-      x = player.pos.x
-      y = player.pos.y
-      z = Layer.player_debug
-      c = Gosu::Color::YELLOW
-      g << Draw::Rect.new(x: x, y: y, z: z, color: c)
-      # g << Draw::RectOutline.new(x: x, y: y, w: 15, h: 15, z: z, color: c)
-      g << Draw::RectOutline.new(x: player.hit_box.x, y: player.hit_box.y, w: player.hit_box.w, h: player.hit_box.h, z: z, color: c)
-    end
-
-    player.missiles.each do |missile|
-      g << Draw::Image.new(
-        path: "missile_01.png",
-        x: missile.pos.x, y: missile.pos.y, z: Layer.player_missiles,
-        center_x: 0.5, center_y: 0,
-      )
-
-      g << Sound::Effect.new(name: "pew", id: missile.id)
+    if player.mode == :active
+      g << Draw::Image.new(path: "fighter_01.png", x: player.pos.x, y: player.pos.y, z: Layer.player)
 
       if player.debug
-        x = missile.pos.x
-        y = missile.pos.y
+        x = player.pos.x
+        y = player.pos.y
         z = Layer.player_debug
         c = Gosu::Color::YELLOW
-        g << Draw::Rect.new(x: x, y: y, z: z, w: 1, h: 1, color: c)
+        g << Draw::Rect.new(x: x, y: y, z: z, color: c)
+        # g << Draw::RectOutline.new(x: x, y: y, w: 15, h: 15, z: z, color: c)
+        g << Draw::RectOutline.new(x: player.hit_box.x, y: player.hit_box.y, w: player.hit_box.w, h: player.hit_box.h, z: z, color: c)
       end
+
+      player.missiles.each do |missile|
+        g << Draw::Image.new(
+          path: "missile_01.png",
+          x: missile.pos.x, y: missile.pos.y, z: Layer.player_missiles,
+          center_x: 0.5, center_y: 0,
+        )
+
+        g << Sound::Effect.new(name: "pew", id: missile.id)
+
+        if player.debug
+          x = missile.pos.x
+          y = missile.pos.y
+          z = Layer.player_debug
+          c = Gosu::Color::YELLOW
+          g << Draw::Rect.new(x: x, y: y, z: z, w: 1, h: 1, color: c)
+        end
+      end
+    elsif player.mode == :explode
+      g << Draw::Animation.new(name: "player_splode",
+                               t: player.explosion.t,
+                               x: player.pos.x,
+                               y: player.pos.y)
+      g << Sound::Effect.new(name: "boom", id: player.num)
     end
   end
 end
