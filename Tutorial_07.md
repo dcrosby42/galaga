@@ -1,5 +1,16 @@
 Building a Galaga Clone - Step 07
 
+Lifecycle of the game
+
+1. Insert Coin
+2. Ready Player One
+3. Song / intro / ramp-in
+4. Fight
+5. Win? next stage
+6. Lose? Game over!
+
+--
+
 Add credit 
 PUSH START BUTTON
   (bonuses)
