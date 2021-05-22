@@ -13,8 +13,8 @@ module Galaga
     }
   end
 
-  def update_stars(stars, input)
-    stars.loc += stars.speed * input.time.dt
+  def update_stars(stars, player, input)
+    stars.loc = player.cruising.loc
     stars.t += input.time.dt
   end
 

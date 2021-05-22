@@ -177,6 +177,8 @@ module Galaga
       update_enemy_fleet state.enemy_fleet, input
     end
 
+    update_stars(state.stars, state.player, input)
+
     state
   end
 
