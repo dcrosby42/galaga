@@ -25,7 +25,7 @@ module Galaga
   FooterHeight = 15
 
   FighterSpeed = 120
-  MissileSpeed = 300
+  MissileSpeed = 350
   MissileFireLimit = 2
 
   StarColors = [
