@@ -11,9 +11,9 @@ module Galaga
   LeftButton = Gosu::KB_LEFT
   RightButton = Gosu::KB_RIGHT
 
-  DebugStarsToggle = Gosu::KB_1
-  DebugPlayerToggle = Gosu::KB_2
-  DebugEnemyToggle = Gosu::KB_3
+  DebugStarsToggle = Gosu::KB_F1
+  DebugPlayerToggle = Gosu::KB_F2
+  DebugEnemyToggle = Gosu::KB_F3
   PauseToggle = Gosu::KB_P
 
   # Game dimensions
@@ -24,9 +24,14 @@ module Galaga
   HeaderHeight = 20
   FooterHeight = 15
 
+  StarSpeed = 60
   FighterSpeed = 120
+  FighterCruiseAccel = 120
   MissileSpeed = 350
   MissileFireLimit = 2
+
+  FontWidth = 8.5 # "retrogame" font
+  FontHeight = 10 # "retrogame" font
 
   StarColors = [
     Gosu::Color::GRAY,
@@ -56,7 +61,7 @@ require "enemies"
 require "stars"
 
 module Galaga
-  Cedar::Sound.on = true
+  Cedar::Sound.on = false
 
   def resource_config
     [
@@ -140,7 +145,7 @@ module Galaga
   def new_state
     seed_rng = Cedar::Prng.new(1122334455)
     state = open_struct({
-      screen: :battle,
+      screen: :start,
       seed_rng: seed_rng,
       paused: false,
       stars: new_stars(star_seed: seed_rng.gen_seed),
@@ -165,19 +170,41 @@ module Galaga
     if input.keyboard.pressed?(DebugEnemyToggle)
       state.enemy_fleet.debug = !state.enemy_fleet.debug
     end
+    if input.keyboard.pressed?(Gosu::KB_5)
+      state.screen = :start
+    end
+    if input.keyboard.pressed?(Gosu::KB_1)
+      state.screen = :battle
+    end
 
     return state if state.paused
 
-    update_stars(state.stars, input)
-
     case state.screen
+    # instructions -> gameover
+    # gameover -> highscores
+    # highscores -> demo
+    # (insert coint) -> start
+    # (start button) -> fanfare
+    # fanfare -> stage
+    # stage:
+    #   stagename
+    #   battle
+    #   boom
+    #   ready
+    #   win
+    #   lose
+    #
+
+    when :start
+      update_stars(state.stars, StarSpeed, input)
     when :battle
       update_collisions state
       update_player state.player, input
       update_enemy_fleet state.enemy_fleet, input
+      update_stars(state.stars, state.player.cruising.speed, input)
     end
 
-    update_stars(state.stars, state.player, input)
+    update_hud(state, input)
 
     state
   end
@@ -191,7 +218,7 @@ module Galaga
     # Player missiles v enemies
     state.player.missiles.each do |missile|
       state.enemy_fleet.enemies.each do |enemy|
-        if point_in_rect(missile.pos, enemy.hit_box)
+        if enemy.mode == :active and point_in_rect(missile.pos, enemy.hit_box)
           # HIT!
           enemy.collisions << missile
           missile.collisions << enemy
@@ -213,12 +240,15 @@ module Galaga
     end
   end
 
+  def update_hud(state, input)
+  end
+
   def draw(state, output, res)
     output.graphics << Draw::Scale.new(Scale) do |g|
       draw_stars g, state.stars
 
       case state.screen
-      when :home_bonuses
+      when :start
         draw_start_info g
         draw_bonuses g
       when :battle
@@ -240,12 +270,45 @@ module Galaga
     )
   end
 
+  Red = Gosu::Color::RED
+  White = Gosu::Color::WHITE
+
   def draw_hud(g, state)
     player = state.player
-    g << Draw::Label.new(text: "  #{player.num}UP     HIGH SCORE", x: 0, y: 0, z: Layer.text, color: Gosu::Color::RED, font: "retrogame")
-    g << Draw::Label.new(text: "  #{player.score.to_s.ljust(10, " ")}#{state.high_score}   ", x: 0, y: 10, z: Layer.text, color: Gosu::Color::WHITE, font: "retrogame")
+    player_blink_on = true
 
-    g << Draw::Label.new(text: " CREDITS #{state.credits}", x: 0, y: 280, color: Gosu::Color::WHITE, font: "retrogame")
+    # (helper)
+    x = 0
+    y = 0
+    z = Layer.text
+    color = Red
+    draw_text = lambda do |text|
+      g << Draw::Label.new(text: text, x: x, y: y, z: z, color: color, font: "retrogame")
+    end
+
+    # player score
+    x = 2 * FontWidth
+    y = 0
+    color = Red
+    draw_text["#{player.num}UP"] if player_blink_on
+    y = FontHeight
+    color = White
+    draw_text[player.score.to_s.ljust(10, " ")]
+
+    # High Score
+    x = 10 * FontWidth
+    y = 0
+    color = Red
+    draw_text["HIGH SCORE"]
+    y = FontHeight
+    x += 2 * FontWidth
+    color = White
+    draw_text["#{state.high_score}"]
+
+    # Credits
+    y = 28 * FontHeight
+    x = FontWidth
+    draw_text["CREDITS #{state.credits}"]
   end
 
   def draw_bonuses(g)
@@ -253,10 +316,10 @@ module Galaga
     g << Draw::Label.new(text: "2ND BONUS FOR 70000 PTS", x: 25, y: 150, z: Layer.text, color: Gosu::Color::YELLOW, font: "retrogame")
     g << Draw::Label.new(text: "AND FOR EVERY 70000 PTS", x: 25, y: 170, z: Layer.text, color: Gosu::Color::YELLOW, font: "retrogame")
 
-    g << Draw::Label.new(text: "\u00A9 1981 NAMCO LTD.", x: 40, y: 210, z: Layer.text, color: Gosu::Color::WHITE, font: "retrogame")
-
     g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 125, z: Layer.text)
     g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 145, z: Layer.text)
     g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 165, z: Layer.text)
+
+    g << Draw::Label.new(text: "\u00A9 1981 NAMCO LTD.", x: 40, y: 210, z: Layer.text, color: Gosu::Color::WHITE, font: "retrogame")
   end
 end

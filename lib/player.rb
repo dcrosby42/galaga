@@ -5,7 +5,10 @@ module Galaga
       score: 0,
       mode: :active,
       pos: { x: 100, y: Height - 30 },
-      cruising: { mode: :cruising, loc: 0, speed: 0, max_speed: 100, accel: 150 },
+      cruising: {
+        mode: :cruising,
+        speed: 0,
+      },
       hit_box: { x: 0, y: 0, w: 15, h: 15 },
       missiles_fired: 0,
       missiles: [],
@@ -60,18 +63,18 @@ module Galaga
       end
     end
 
-    # Update starfield cruising loc
+    # Update cruising speed
     begin
       c = player.cruising
       if c.mode == :cruising
-        c.speed += c.accel * input.time.dt
-        c.speed = c.max_speed if c.speed > c.max_speed
+        c.speed += FighterCruiseAccel * input.time.dt
+        c.speed = StarSpeed if c.speed > StarSpeed
       elsif c.mode == :stopping
-        c.speed -= c.accel * input.time.dt
+        c.speed -= FighterCruiseAccess * input.time.dt
         c.speed = 0 if c.speed < 0
       end
       # (remember: moving "forward" against the starfield means climbing toward -y)
-      c.loc -= c.speed * input.time.dt
+      #c.loc -= c.speed * input.time.dt
     end
 
     # update hitbox location
