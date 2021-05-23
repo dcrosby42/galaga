@@ -22,11 +22,12 @@ module Galaga
   Height = 288
 
   HeaderHeight = 20
-  FooterHeight = 15
+  FooterHeight = 16
 
   StarSpeed = 60
   FighterSpeed = 120
   FighterCruiseAccel = 120
+  FighterHeight = 16
   MissileSpeed = 350
   MissileFireLimit = 2
 
@@ -147,14 +148,17 @@ module Galaga
     seed_rng = Cedar::Prng.new(1122334455)
     state = open_struct({
       screen: :start,
-      seed_rng: seed_rng,
-      paused: false,
-      stars: new_stars(star_seed: seed_rng.gen_seed),
       credits: 0,
+      stage: 0,
       high_score: 20000,
+
+      seed_rng: seed_rng,
+      stars: new_stars(star_seed: seed_rng.gen_seed),
       player: new_player,
       enemy_fleet: new_enemy_fleet,
       hud: new_hud,
+
+      paused: false,
     })
     state
   end
@@ -165,47 +169,6 @@ module Galaga
     return state if state.paused
 
     case state.screen
-    # instructions -> gameover
-    # gameover -> highscores
-    # highscores -> demo
-    # (insert coint) -> start
-    # (start button) -> fanfare
-    # fanfare -> stage
-    # stage:
-    #   stagename
-    #   battle
-    #   boom
-    #   ready
-    #   win
-    #   lose
-    #
-
-    # The Galactic Heroes
-    #   5s
-
-    # Galaga
-    #   Score
-    #     Figth
-    #   Copy
-    # Fanfare
-    #   Music
-    #   PLAYER 1
-    #   (repl w) STAGE 1
-    #   (above ^) PLAYER 1
-    #     Ship appears, can strafe but not fire
-    #       2-3 seconds
-    #
-    # Other stage beginnings:
-    #   STAGE 2
-    #   Stage badge counter increment
-    #   (ship can move and fire)
-    #   2ish seconds
-    #   title vanishes
-    #   First wave arrives
-
-    # Game Over
-    #   GAME OVER for a few seconds
-    #   Results:  Shots fired, number of hits, hit-miss ratio %
 
     when :start
       update_stars(state.stars, StarSpeed, input)
@@ -219,6 +182,27 @@ module Galaga
     update_hud(state, input)
 
     state
+  end
+
+  def update_dev_controls(state, input)
+    if input.keyboard.pressed?(PauseToggle)
+      state.paused = !state.paused
+    end
+    if input.keyboard.pressed?(DebugPlayerToggle)
+      state.player.debug = !state.player.debug
+    end
+    if input.keyboard.pressed?(DebugStarsToggle)
+      state.stars.debug = !state.stars.debug
+    end
+    if input.keyboard.pressed?(DebugEnemyToggle)
+      state.enemy_fleet.debug = !state.enemy_fleet.debug
+    end
+    if input.keyboard.pressed?(Gosu::KB_5)
+      state.screen = :start
+    end
+    if input.keyboard.pressed?(Gosu::KB_1)
+      state.screen = :battle
+    end
   end
 
   def update_collisions(state)
@@ -260,13 +244,15 @@ module Galaga
       when :start
         draw_start_info g
         draw_bonuses g
+        draw_hud_scores g, state.hud
+        draw_hud_credits g, state.hud
       when :battle
         draw_player g, state.player
-
         draw_enemy_fleet g, state.enemy_fleet
+        draw_hud_scores g, state.hud
+        draw_hud_ships g, state.hud
+        draw_hud_stages g, state.hud
       end
-
-      draw_hud g, state.hud
     end
   end
 

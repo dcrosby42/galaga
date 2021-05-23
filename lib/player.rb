@@ -3,13 +3,15 @@ module Galaga
     {
       num: 1,
       score: 0,
+      total_ships: 3,
+      active_ships: 1,
       mode: :active,
-      pos: { x: 100, y: Height - 30 },
+      pos: { x: 100, y: Height - FooterHeight - FighterHeight },
       cruising: {
         mode: :cruising,
         speed: 0,
       },
-      hit_box: { x: 0, y: 0, w: 15, h: 15 },
+      hit_box: { x: 0, y: 0, w: 16, h: 16 },
       missiles_fired: 0,
       missiles: [],
       collisions: [],
