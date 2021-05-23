@@ -1,0 +1,13 @@
+digraph G {
+  labelloc="t";
+  label="Game States (high level)";
+  graph [fontname="helvetica"]
+  node [fontname="helvetica"]
+  edge [fontsize=10 fontname="helvetica"]
+
+  I[label=Title shape=rect] // instr, demo, hs
+  P[label=Gameplay shape=rect] // fanfare, battle, stageOpen
+  F[label=Epilogue shape=rect]  // gameOver, enterScore
+
+  I -> P -> F -> I
+}

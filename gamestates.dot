@@ -1,0 +1,54 @@
+digraph G {
+    labelloc="t";
+    label="Game States (grouped)";
+    graph [fontname="helvetica"]
+    node [fontname="helvetica"]
+    edge [fontsize=10 fontname="helvetica"]
+    
+    ROOT1[label=0]
+    ROOT2[label=0]
+
+    ROOT1 -> I[label="if credits=0"]
+    ROOT1 -> S[label="if credits>0"]
+
+    subgraph cluster_idle {
+      label=Title
+      I[label="Instructions"] 
+      D[label="Gameplay Demo"]
+      HS[label="High Scores"]
+      S[label="Start"]
+    }
+
+    subgraph cluster_playing {
+      label=Gameplay
+      FF[label="Fanfare / Stage 1 Open"]
+      B[label="Battle"]
+      DTH[label="Death"]
+      ST[label="Stage N Open"]
+    }
+
+    subgraph cluster_finishing {
+      label=Epilogue
+      EHS[label="Enter High Score"]
+      GO[label="Game Over"]
+    }
+
+    I -> D[label="5s"]
+    D -> HS[label="Demo fin"]
+    HS -> I[label="5s"]
+    {I D HS} -> S[label="Insert coin"]
+
+    S -> FF[label="Press start"]
+    FF -> B[label="5s"]
+    B -> ST[label="Victory"]
+    ST -> B[label="2s"]
+
+    B -> DTH[label="Killed"]
+    DTH -> B[label="ships>0"]
+    DTH -> GO[label="ships=0"]
+
+    GO -> EHS[label="score>=min(HS)"]
+    GO -> ROOT2[label="score<min(HS)"]
+    EHS -> ROOT2[label="done"]
+
+}
