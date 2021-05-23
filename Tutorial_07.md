@@ -27,3 +27,49 @@ Start (1)
 
 GAME OVER (no sound/music)
   enemies still floating
+
+
+#
+```
+    # instructions -> gameover
+    # gameover -> highscores
+    # highscores -> demo
+    # (insert coint) -> start
+    # (start button) -> fanfare
+    # fanfare -> stage
+    # stage:
+    #   stagename
+    #   battle
+    #   boom
+    #   ready
+    #   win
+    #   lose
+    #
+
+    # The Galactic Heroes
+    #   5s
+
+    # Galaga
+    #   Score
+    #     Figth
+    #   Copy
+    # Fanfare
+    #   Music
+    #   PLAYER 1
+    #   (repl w) STAGE 1
+    #   (above ^) PLAYER 1
+    #     Ship appears, can strafe but not fire
+    #       2-3 seconds
+    #
+    # Other stage beginnings:
+    #   STAGE 2
+    #   Stage badge counter increment
+    #   (ship can move and fire)
+    #   2ish seconds
+    #   title vanishes
+    #   First wave arrives
+
+    # Game Over
+    #   GAME OVER for a few seconds
+    #   Results:  Shots fired, number of hits, hit-miss ratio %
+```

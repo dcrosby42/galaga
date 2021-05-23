@@ -160,24 +160,7 @@ module Galaga
   end
 
   def update(state, input, res)
-    if input.keyboard.pressed?(PauseToggle)
-      state.paused = !state.paused
-    end
-    if input.keyboard.pressed?(DebugPlayerToggle)
-      state.player.debug = !state.player.debug
-    end
-    if input.keyboard.pressed?(DebugStarsToggle)
-      state.stars.debug = !state.stars.debug
-    end
-    if input.keyboard.pressed?(DebugEnemyToggle)
-      state.enemy_fleet.debug = !state.enemy_fleet.debug
-    end
-    if input.keyboard.pressed?(Gosu::KB_5)
-      state.screen = :start
-    end
-    if input.keyboard.pressed?(Gosu::KB_1)
-      state.screen = :battle
-    end
+    update_dev_controls state, input
 
     return state if state.paused
 
@@ -196,6 +179,33 @@ module Galaga
     #   win
     #   lose
     #
+
+    # The Galactic Heroes
+    #   5s
+
+    # Galaga
+    #   Score
+    #     Figth
+    #   Copy
+    # Fanfare
+    #   Music
+    #   PLAYER 1
+    #   (repl w) STAGE 1
+    #   (above ^) PLAYER 1
+    #     Ship appears, can strafe but not fire
+    #       2-3 seconds
+    #
+    # Other stage beginnings:
+    #   STAGE 2
+    #   Stage badge counter increment
+    #   (ship can move and fire)
+    #   2ish seconds
+    #   title vanishes
+    #   First wave arrives
+
+    # Game Over
+    #   GAME OVER for a few seconds
+    #   Results:  Shots fired, number of hits, hit-miss ratio %
 
     when :start
       update_stars(state.stars, StarSpeed, input)
