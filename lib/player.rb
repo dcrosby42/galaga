@@ -70,7 +70,7 @@ module Galaga
         c.speed += FighterCruiseAccel * input.time.dt
         c.speed = StarSpeed if c.speed > StarSpeed
       elsif c.mode == :stopping
-        c.speed -= FighterCruiseAccess * input.time.dt
+        c.speed -= FighterCruiseAccel * input.time.dt
         c.speed = 0 if c.speed < 0
       end
       # (remember: moving "forward" against the starfield means climbing toward -y)
