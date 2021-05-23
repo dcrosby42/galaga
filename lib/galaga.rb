@@ -153,6 +153,14 @@ module Galaga
       high_score: 20000,
       player: new_player,
       enemy_fleet: new_enemy_fleet,
+      hud: {
+        player_blink_state: true,
+        player_name: "",
+        player_score: 0,
+        high_score: 0,
+        credits: 0,
+        show_credits: true,
+      },
     })
     state
   end
@@ -241,6 +249,16 @@ module Galaga
   end
 
   def update_hud(state, input)
+    hud = state.hud
+    hud.player_name = "#{state.player.num}UP"
+    hud.player_score = state.player.score
+    hud.high_score = state.high_score
+    hud.credits = state.credits
+    if state.screen == :battle
+      hud.player_blink_state = (2 * input.time.t).floor.even?
+    else
+      hud.player_blink_state = true
+    end
   end
 
   def draw(state, output, res)
@@ -257,7 +275,7 @@ module Galaga
         draw_enemy_fleet g, state.enemy_fleet
       end
 
-      draw_hud g, state
+      draw_hud g, state.hud
     end
   end
 
@@ -273,9 +291,7 @@ module Galaga
   Red = Gosu::Color::RED
   White = Gosu::Color::WHITE
 
-  def draw_hud(g, state)
-    player = state.player
-    player_blink_on = true
+  def draw_hud(g, hud)
 
     # (helper)
     x = 0
@@ -290,10 +306,10 @@ module Galaga
     x = 2 * FontWidth
     y = 0
     color = Red
-    draw_text["#{player.num}UP"] if player_blink_on
+    draw_text["#{hud.player_name}"] if hud.player_blink_state
     y = FontHeight
     color = White
-    draw_text[player.score.to_s.ljust(10, " ")]
+    draw_text[hud.player_score.to_s.ljust(10, " ")]
 
     # High Score
     x = 10 * FontWidth
@@ -303,12 +319,12 @@ module Galaga
     y = FontHeight
     x += 2 * FontWidth
     color = White
-    draw_text["#{state.high_score}"]
+    draw_text["#{hud.high_score}"]
 
     # Credits
     y = 28 * FontHeight
     x = FontWidth
-    draw_text["CREDITS #{state.credits}"]
+    draw_text["CREDITS #{hud.credits}"]
   end
 
   def draw_bonuses(g)
