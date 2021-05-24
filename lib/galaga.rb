@@ -31,20 +31,9 @@ module Galaga
   MissileSpeed = 350
   MissileFireLimit = 2
 
-  FontWidth = 8.5 # "retrogame" font
-  FontHeight = 10 # "retrogame" font
+  FontWidth = 8.5 # "retrogame" fixed with font char width
+  FontHeight = 10 # "retrogame" fixed with font char height
 
-  StarColors = [
-    Gosu::Color::GRAY,
-    Gosu::Color::WHITE,
-    Gosu::Color::AQUA,
-    Gosu::Color::RED,
-    Gosu::Color::GREEN,
-    Gosu::Color::BLUE,
-    Gosu::Color::YELLOW,
-    Gosu::Color::FUCHSIA,
-    Gosu::Color::CYAN,
-  ]
   Layer = open_struct(
     stars: 0,
     enemy_fire: 99,

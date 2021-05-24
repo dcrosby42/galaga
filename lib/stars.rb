@@ -1,4 +1,16 @@
 module Galaga
+  StarColors = [
+    Gosu::Color::GRAY,
+    Gosu::Color::WHITE,
+    Gosu::Color::AQUA,
+    Gosu::Color::RED,
+    Gosu::Color::GREEN,
+    Gosu::Color::BLUE,
+    Gosu::Color::YELLOW,
+    Gosu::Color::FUCHSIA,
+    Gosu::Color::CYAN,
+  ]
+
   def new_stars(star_seed:)
     {
       bounds: { left: 0, top: HeaderHeight, right: Width, bottom: Height - FooterHeight },
