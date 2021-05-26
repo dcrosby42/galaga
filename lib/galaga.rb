@@ -54,6 +54,18 @@ module Galaga
   def resource_config
     [
       {
+        type: "image_sprite",
+        name: "fighter",
+        image: "fighter_01.png",
+      },
+      {
+        type: "image_sprite",
+        name: "missile",
+        image: "missile_01.png",
+        center_x: 0.5,
+        center_y: 0,
+      },
+      {
         type: "font",
         name: "retrogame",
         font: "narpassword.ttf",
@@ -240,9 +252,9 @@ module Galaga
     g << Draw::Label.new(text: "2ND BONUS FOR 70000 PTS", x: 25, y: 150, z: Layer.text, color: Gosu::Color::YELLOW, font: "retrogame")
     g << Draw::Label.new(text: "AND FOR EVERY 70000 PTS", x: 25, y: 170, z: Layer.text, color: Gosu::Color::YELLOW, font: "retrogame")
 
-    g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 125, z: Layer.text)
-    g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 145, z: Layer.text)
-    g << Draw::Image.new(path: "fighter_01.png", x: 5, y: 165, z: Layer.text)
+    g << Draw::Sprite.new(name: "fighter", x: 5, y: 125, z: Layer.text)
+    g << Draw::Sprite.new(name: "fighter", x: 5, y: 145, z: Layer.text)
+    g << Draw::Sprite.new(name: "fighter", x: 5, y: 165, z: Layer.text)
 
     g << Draw::Label.new(text: "\u00A9 1981 NAMCO LTD.", x: 40, y: 210, z: Layer.text, color: Gosu::Color::WHITE, font: "retrogame")
   end

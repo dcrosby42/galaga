@@ -110,7 +110,7 @@ module Galaga
 
   def draw_player(g, player)
     if player.mode == :active
-      g << Draw::Image.new(path: "fighter_01.png", x: player.pos.x, y: player.pos.y, z: Layer.player)
+      g << Draw::Sprite.new(name: "fighter", x: player.pos.x, y: player.pos.y, z: Layer.player)
 
       if player.debug
         x = player.pos.x
@@ -118,15 +118,13 @@ module Galaga
         z = Layer.player_debug
         c = Gosu::Color::YELLOW
         g << Draw::Rect.new(x: x, y: y, z: z, color: c)
-        # g << Draw::RectOutline.new(x: x, y: y, w: 15, h: 15, z: z, color: c)
         g << Draw::RectOutline.new(x: player.hit_box.x, y: player.hit_box.y, w: player.hit_box.w, h: player.hit_box.h, z: z, color: c)
       end
 
       player.missiles.each do |missile|
-        g << Draw::Image.new(
-          path: "missile_01.png",
+        g << Draw::Sprite.new(
+          name: "missile",
           x: missile.pos.x, y: missile.pos.y, z: Layer.player_missiles,
-          center_x: 0.5, center_y: 0,
         )
 
         g << Sound::Effect.new(name: "pew", id: missile.id)

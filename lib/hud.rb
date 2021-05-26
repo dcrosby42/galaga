@@ -48,7 +48,7 @@ module Galaga
     hud.player_reserve_ships.times do |i|
       x = i * 15
       y = Height - FighterHeight
-      g << Draw::Image.new(path: "fighter_01.png", x: x, y: y, z: Layer.player)
+      g << Draw::Sprite.new(name: "fighter", x: x, y: y, z: Layer.player)
     end
   end
 
