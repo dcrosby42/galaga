@@ -58,7 +58,9 @@ module Galaga
   def new_state
     seed_rng = Cedar::Prng.new(1122334455)
     state = open_struct({
-      screen: :start,
+      phase: nil,
+      screen: nil,
+      screen_countdown: nil,
       credits: 0,
       stage: 0,
       high_score: 20000,
@@ -77,24 +79,54 @@ module Galaga
   def update(state, input, res)
     update_dev_controls state, input
 
+    state.phase ||= :title
+
     return state if state.paused
 
-    case state.screen
-    when :instruction
-    when :demo
-    when :high_scores
-    when :start
-      update_stars(state.stars, StarSpeed, input)
-    when :fanfare
-    when :stage_open
-    when :battle
-      update_collisions state
-      update_player state.player, input
-      update_enemy_fleet state.enemy_fleet, input
-      update_stars(state.stars, state.player.cruising.speed, input)
-    when :death
-    when :game_over
-    when :new_high_score
+    case state.phase
+    when :title
+      state.screen ||= :instructions
+      case state.screen
+      when :instructions
+        update_stars(state.stars, StarSpeed, input)
+        state.screen_countdown ||= 2
+        state.screen_countdown -= input.time.dt
+        if state.screen_countdown < 0
+          state.screen_countdown = nil
+          state.screen = :demo
+        end
+      when :demo
+        update_stars(state.stars, StarSpeed, input)
+        state.screen_countdown ||= 5
+        state.screen_countdown -= input.time.dt
+        if state.screen_countdown < 0
+          state.screen_countdown = nil
+          state.screen = :high_scores
+        end
+      when :high_scores
+        update_stars(state.stars, StarSpeed, input)
+        state.screen_countdown ||= 2
+        state.screen_countdown -= input.time.dt
+        if state.screen_countdown < 0
+          state.screen_countdown = nil
+          state.screen = :instructions
+        end
+      when :start
+        update_stars(state.stars, StarSpeed, input)
+      end
+    when :gameplay
+      case state.screen
+      when :fanfare
+      when :stage_open
+      when :battle
+        update_collisions state
+        update_player state.player, input
+        update_enemy_fleet state.enemy_fleet, input
+        update_stars(state.stars, state.player.cruising.speed, input)
+      when :death
+      when :game_over
+      when :new_high_score
+      end
     end
 
     update_hud(state, input)
@@ -115,9 +147,6 @@ module Galaga
     if input.keyboard.pressed?(DebugEnemyToggle)
       state.enemy_fleet.debug = !state.enemy_fleet.debug
     end
-    if input.keyboard.pressed?(Gosu::KB_5)
-      state.screen = :start
-    end
     if input.keyboard.pressed?(Gosu::KB_1)
       state.screen = :battle
     end
@@ -127,10 +156,24 @@ module Galaga
     output.graphics << Draw::Scale.new(Scale) do |g|
       draw_stars g, state.stars
 
+      placeholder = lambda do |words|
+        draw_text g, words, 0, 4, Blue
+        draw_text g, "#{(state.screen_countdown || 0).round(1)}", 24, 4, White
+      end
+
       case state.screen
-      when :instruction
+      when :instructions
+        draw_hud_scores g, state.hud
+        draw_hud_credits g, state.hud
+        placeholder["Instructions"]
       when :demo
+        draw_hud_scores g, state.hud
+        draw_hud_credits g, state.hud
+        placeholder["Demo"]
       when :high_scores
+        draw_hud_scores g, state.hud
+        draw_hud_credits g, state.hud
+        placeholder["High Scores"]
       when :start
         draw_start_info g
         draw_bonuses g
@@ -149,6 +192,17 @@ module Galaga
       when :new_high_score
       end
     end
+  end
+
+  Red = Gosu::Color::RED
+  Blue = Gosu::Color::BLUE
+  White = Gosu::Color::WHITE
+
+  def draw_text(g, text, charx, chary, color)
+    x = charx * FontWidth
+    y = chary * FontHeight
+    z = Layer.text
+    g << Draw::Label.new(text: text, x: x, y: y, z: z, color: color, font: "retrogame")
   end
 
   def draw_start_info(g)

@@ -27,8 +27,6 @@ module Galaga
     end
   end
 
-  Red = Gosu::Color::RED
-  White = Gosu::Color::WHITE
 
   def draw_hud_scores(g, hud)
     # Player Score
@@ -55,10 +53,4 @@ module Galaga
   def draw_hud_stages(g, hud)
   end
 
-  def draw_text(g, text, charx, chary, color)
-    x = charx * FontWidth
-    y = chary * FontHeight
-    z = Layer.text
-    g << Draw::Label.new(text: text, x: x, y: y, z: z, color: color, font: "retrogame")
-  end
 end
