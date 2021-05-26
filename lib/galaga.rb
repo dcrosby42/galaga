@@ -1,11 +1,7 @@
-require "geom"
-
 module Galaga
   extend self
   include Cedar
   extend Cedar::Helpers
-  include Geom
-  extend Geom
 
   Fire1Button = Gosu::KB_Q
   LeftButton = Gosu::KB_LEFT
@@ -50,6 +46,7 @@ require "player"
 require "enemies"
 require "stars"
 require "hud"
+require "collisions"
 
 module Galaga
   Cedar::Sound.on = false
@@ -158,14 +155,21 @@ module Galaga
     return state if state.paused
 
     case state.screen
-
+    when :instruction
+    when :demo
+    when :high_scores
     when :start
       update_stars(state.stars, StarSpeed, input)
+    when :fanfare
+    when :stage_open
     when :battle
       update_collisions state
       update_player state.player, input
       update_enemy_fleet state.enemy_fleet, input
       update_stars(state.stars, state.player.cruising.speed, input)
+    when :death
+    when :game_over
+    when :new_high_score
     end
 
     update_hud(state, input)
@@ -194,53 +198,30 @@ module Galaga
     end
   end
 
-  def update_collisions(state)
-    state.enemy_fleet.enemies.each do |enemy|
-      enemy.collisions.clear
-    end
-    state.player.collisions.clear
-
-    # Player missiles v enemies
-    state.player.missiles.each do |missile|
-      state.enemy_fleet.enemies.each do |enemy|
-        if enemy.mode == :active and point_in_rect(missile.pos, enemy.hit_box)
-          # HIT!
-          enemy.collisions << missile
-          missile.collisions << enemy
-          state.player.score += 80
-        end
-      end
-    end
-
-    # Enemies v player
-    state.enemy_fleet.enemies.each do |enemy|
-      if enemy.mode == :active
-        if rect_overlap(enemy.hit_box, state.player.hit_box)
-          if enemy.collisions.length == 0 && state.player.collisions.length == 0
-            enemy.collisions << state.player
-            state.player.collisions << enemy
-          end
-        end
-      end
-    end
-  end
-
   def draw(state, output, res)
     output.graphics << Draw::Scale.new(Scale) do |g|
       draw_stars g, state.stars
 
       case state.screen
+      when :instruction
+      when :demo
+      when :high_scores
       when :start
         draw_start_info g
         draw_bonuses g
         draw_hud_scores g, state.hud
         draw_hud_credits g, state.hud
+      when :fanfare
+      when :stage_open
       when :battle
         draw_player g, state.player
         draw_enemy_fleet g, state.enemy_fleet
         draw_hud_scores g, state.hud
         draw_hud_ships g, state.hud
         draw_hud_stages g, state.hud
+      when :death
+      when :game_over
+      when :new_high_score
       end
     end
   end
