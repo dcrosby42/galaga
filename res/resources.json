@@ -90,6 +90,12 @@
   },
   {
     "type": "sound",
+    "name": "theme_song",
+    "sound": "start_song.wav",
+    "volume": 0.5
+  },
+  {
+    "type": "sound",
     "name": "credit_added",
     "sound": "credit.wav",
     "volume": 0.5

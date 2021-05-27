@@ -20,13 +20,12 @@ module Galaga
     hud.credits = state.credits
     hud.player_reserve_ships = state.player.total_ships - state.player.active_ships
     hud.stage = state.stage
-    if state.screen == :battle
+    if state.phase == :gameplay
       hud.player_blink_state = (2 * input.time.t).floor.even?
     else
       hud.player_blink_state = true
     end
   end
-
 
   def draw_hud_scores(g, hud)
     # Player Score
@@ -52,5 +51,4 @@ module Galaga
 
   def draw_hud_stages(g, hud)
   end
-
 end

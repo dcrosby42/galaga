@@ -49,7 +49,8 @@ require "hud"
 require "collisions"
 
 module Galaga
-  Cedar::Sound.on = true
+  Cedar::Sound.on = false
+  Cedar::Sound.debug = false
 
   def resource_config
     "resources.json"
@@ -83,23 +84,29 @@ module Galaga
 
     return state if state.paused
 
-    if state.credits_sound
-      state.credits_sound[:t] -= input.time.dt
-      state.credits_sound = nil if state.credits_sound[:t] <= 0
-    end
     case state.phase
     when :title
+      # The 'title' phase encapsulates the intro, titles, scores and start screens.
+
       state.screen ||= :instructions
-      if input.keyboard.pressed?(Gosu::KB_5)
-        state.credits += 1
-        state.credits_sound = { t: 2 }
-      end
+
+      # Always jump to start screen when there are credits
       if state.credits > 0
         state.screen = :start
       end
+
+      # insert coin:
+      if input.keyboard.pressed?(Gosu::KB_5)
+        state.credits += 1
+        state.credits_sound = { t: 0.6 }
+      end
+
+      # Star bg scrolls for all title screens
       update_stars(state.stars, StarSpeed, input)
+
       case state.screen
       when :instructions
+        # Stand-in: count down til next screen...
         state.screen_countdown ||= 2
         state.screen_countdown -= input.time.dt
         if state.screen_countdown < 0
@@ -107,6 +114,7 @@ module Galaga
           state.screen = :demo
         end
       when :demo
+        # Stand-in: count down til next screen...
         state.screen_countdown ||= 5
         state.screen_countdown -= input.time.dt
         if state.screen_countdown < 0
@@ -114,6 +122,7 @@ module Galaga
           state.screen = :high_scores
         end
       when :high_scores
+        # Stand-in: count down til next screen...
         state.screen_countdown ||= 2
         state.screen_countdown -= input.time.dt
         if state.screen_countdown < 0
@@ -121,10 +130,24 @@ module Galaga
           state.screen = :instructions
         end
       when :start
+        # Wait for P1 start button:
+        if input.keyboard.pressed?(Gosu::KB_1)
+          state.phase = :gameplay
+          state.screen = :fanfare
+        end
       end
     when :gameplay
+      # The gameplay phase encapsulates battle, stage transitions, 
       case state.screen
       when :fanfare
+        state.theme_song ||= { t: 6.5 }
+        state.theme_song[:t] -= input.time.dt
+        if state.theme_song[:t] <= 0
+          state.theme_song = nil
+          state.screen = :battle
+          state.player.cruising.speed = StarSpeed
+        end
+        update_stars(state.stars, StarSpeed, input)
       when :stage_open
       when :battle
         update_collisions state
@@ -132,12 +155,20 @@ module Galaga
         update_enemy_fleet state.enemy_fleet, input
         update_stars(state.stars, state.player.cruising.speed, input)
       when :death
+      end
+    when :epilogue
+      # The epilogue phase is post-gameplay: gameover, stats, maybe entering a new high score.
       when :game_over
       when :new_high_score
       end
     end
 
     update_hud(state, input)
+
+    if state.credits_sound
+      state.credits_sound[:t] -= input.time.dt
+      state.credits_sound = nil if state.credits_sound[:t] <= 0
+    end
 
     state
   end
@@ -154,9 +185,6 @@ module Galaga
     end
     if input.keyboard.pressed?(DebugEnemyToggle)
       state.enemy_fleet.debug = !state.enemy_fleet.debug
-    end
-    if input.keyboard.pressed?(Gosu::KB_1)
-      state.screen = :battle
     end
   end
 
@@ -190,11 +218,16 @@ module Galaga
           draw_hud_credits g, state.hud
         end
         if state.credits_sound
-          g << Sound::Effect.new(name: "credit_added")
+          g << Sound::Effect.new(name: "credit_added", id: state.credits)
         end
       when :gameplay
         case state.screen
         when :fanfare
+          if state.theme_song
+            g << Sound::Effect.new(name: "theme_song")
+          end
+          draw_hud_scores g, state.hud
+          draw_hud_credits g, state.hud
         when :stage_open
         when :battle
           draw_player g, state.player
