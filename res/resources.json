@@ -12,6 +12,13 @@
     "center_y": 0
   },
   {
+    "type": "image_sprite",
+    "name": "bad_missile",
+    "image": "enemy_missile.png",
+    "center_x": 0.5,
+    "center_y": 1
+  },
+  {
     "type": "font",
     "name": "retrogame",
     "font": "narpassword.ttf",
