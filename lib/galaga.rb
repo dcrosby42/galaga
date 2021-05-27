@@ -49,7 +49,7 @@ require "hud"
 require "collisions"
 
 module Galaga
-  Cedar::Sound.on = false
+  Cedar::Sound.on = true
   Cedar::Sound.debug = false
 
   def resource_config
@@ -137,7 +137,7 @@ module Galaga
         end
       end
     when :gameplay
-      # The gameplay phase encapsulates battle, stage transitions, 
+      # The gameplay phase encapsulates battle, stage transitions,
       case state.screen
       when :fanfare
         state.theme_song ||= { t: 6.5 }
@@ -158,6 +158,7 @@ module Galaga
       end
     when :epilogue
       # The epilogue phase is post-gameplay: gameover, stats, maybe entering a new high score.
+      case state.screen
       when :game_over
       when :new_high_score
       end
