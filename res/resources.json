@@ -87,5 +87,11 @@
     "name": "waka",
     "sound": "enemy_hit_01.wav",
     "volume": 0.5
+  },
+  {
+    "type": "sound",
+    "name": "credit_added",
+    "sound": "credit.wav",
+    "volume": 0.5
   }
 ]

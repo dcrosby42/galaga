@@ -49,7 +49,7 @@ require "hud"
 require "collisions"
 
 module Galaga
-  Cedar::Sound.on = false
+  Cedar::Sound.on = true
 
   def resource_config
     "resources.json"
@@ -83,12 +83,23 @@ module Galaga
 
     return state if state.paused
 
+    if state.credits_sound
+      state.credits_sound[:t] -= input.time.dt
+      state.credits_sound = nil if state.credits_sound[:t] <= 0
+    end
     case state.phase
     when :title
       state.screen ||= :instructions
+      if input.keyboard.pressed?(Gosu::KB_5)
+        state.credits += 1
+        state.credits_sound = { t: 2 }
+      end
+      if state.credits > 0
+        state.screen = :start
+      end
+      update_stars(state.stars, StarSpeed, input)
       case state.screen
       when :instructions
-        update_stars(state.stars, StarSpeed, input)
         state.screen_countdown ||= 2
         state.screen_countdown -= input.time.dt
         if state.screen_countdown < 0
@@ -96,7 +107,6 @@ module Galaga
           state.screen = :demo
         end
       when :demo
-        update_stars(state.stars, StarSpeed, input)
         state.screen_countdown ||= 5
         state.screen_countdown -= input.time.dt
         if state.screen_countdown < 0
@@ -104,7 +114,6 @@ module Galaga
           state.screen = :high_scores
         end
       when :high_scores
-        update_stars(state.stars, StarSpeed, input)
         state.screen_countdown ||= 2
         state.screen_countdown -= input.time.dt
         if state.screen_countdown < 0
@@ -112,7 +121,6 @@ module Galaga
           state.screen = :instructions
         end
       when :start
-        update_stars(state.stars, StarSpeed, input)
       end
     when :gameplay
       case state.screen
@@ -156,40 +164,51 @@ module Galaga
     output.graphics << Draw::Scale.new(Scale) do |g|
       draw_stars g, state.stars
 
-      placeholder = lambda do |words|
-        draw_text g, words, 0, 4, Blue
-        draw_text g, "#{(state.screen_countdown || 0).round(1)}", 24, 4, White
-      end
-
-      case state.screen
-      when :instructions
-        draw_hud_scores g, state.hud
-        draw_hud_credits g, state.hud
-        placeholder["Instructions"]
-      when :demo
-        draw_hud_scores g, state.hud
-        draw_hud_credits g, state.hud
-        placeholder["Demo"]
-      when :high_scores
-        draw_hud_scores g, state.hud
-        draw_hud_credits g, state.hud
-        placeholder["High Scores"]
-      when :start
-        draw_start_info g
-        draw_bonuses g
-        draw_hud_scores g, state.hud
-        draw_hud_credits g, state.hud
-      when :fanfare
-      when :stage_open
-      when :battle
-        draw_player g, state.player
-        draw_enemy_fleet g, state.enemy_fleet
-        draw_hud_scores g, state.hud
-        draw_hud_ships g, state.hud
-        draw_hud_stages g, state.hud
-      when :death
-      when :game_over
-      when :new_high_score
+      case state.phase
+      when :title
+        placeholder = lambda do |words|
+          draw_text g, words, 0, 4, Blue
+          draw_text g, "#{(state.screen_countdown || 0).round(1)}", 24, 4, White
+        end
+        case state.screen
+        when :instructions
+          draw_hud_scores g, state.hud
+          draw_hud_credits g, state.hud
+          placeholder["Instructions"]
+        when :demo
+          draw_hud_scores g, state.hud
+          draw_hud_credits g, state.hud
+          placeholder["Demo"]
+        when :high_scores
+          draw_hud_scores g, state.hud
+          draw_hud_credits g, state.hud
+          placeholder["High Scores"]
+        when :start
+          draw_start_info g
+          draw_bonuses g
+          draw_hud_scores g, state.hud
+          draw_hud_credits g, state.hud
+        end
+        if state.credits_sound
+          g << Sound::Effect.new(name: "credit_added")
+        end
+      when :gameplay
+        case state.screen
+        when :fanfare
+        when :stage_open
+        when :battle
+          draw_player g, state.player
+          draw_enemy_fleet g, state.enemy_fleet
+          draw_hud_scores g, state.hud
+          draw_hud_ships g, state.hud
+          draw_hud_stages g, state.hud
+        when :death
+        end
+      when :epilogue
+        case state.screen
+        when :game_over
+        when :new_high_score
+        end
       end
     end
   end
