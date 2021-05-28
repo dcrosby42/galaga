@@ -29,16 +29,16 @@ module Galaga
 
   def draw_hud_scores(g, hud)
     # Player Score
-    draw_text(g, "#{hud.player_name}", 2, 0, Red) if hud.player_blink_state
-    draw_text(g, hud.player_score.to_s.ljust(10, " "), 2, 1, White)
+    g << text("#{hud.player_name}", 2, 0, Red) if hud.player_blink_state
+    g << text(hud.player_score.to_s.ljust(10, " "), 2, 1, White)
 
     # High Score
-    draw_text(g, "HIGH SCORE", 10, 0, Red)
-    draw_text(g, "#{hud.high_score}", 12, 1, White)
+    g << text("HIGH SCORE", 10, 0, Red)
+    g << text("#{hud.high_score}", 12, 1, White)
   end
 
   def draw_hud_credits(g, hud)
-    draw_text(g, "CREDITS #{hud.credits}", 1, 28, White)
+    g << text("CREDITS #{hud.credits}", 1, 28, White)
   end
 
   def draw_hud_ships(g, hud)

@@ -68,9 +68,9 @@ module Galaga
 
       seed_rng: seed_rng,
       stars: new_stars(star_seed: seed_rng.gen_seed),
-      player: new_player,
-      enemy_fleet: new_enemy_fleet,
       hud: new_hud,
+      player: new_player,
+      enemy_fleet: nil,
 
       paused: false,
     })
@@ -132,6 +132,10 @@ module Galaga
       when :start
         # Wait for P1 start button:
         if input.keyboard.pressed?(Gosu::KB_1)
+          state.credits -= 1
+          state.stage = 1
+          # state.player = new_player
+          state.enemy_fleet = new_enemy_fleet
           state.phase = :gameplay
           state.screen = :fanfare
         end
@@ -140,14 +144,35 @@ module Galaga
       # The gameplay phase encapsulates battle, stage transitions,
       case state.screen
       when :fanfare
-        state.theme_song ||= { t: 6.5 }
-        state.theme_song[:t] -= input.time.dt
-        if state.theme_song[:t] <= 0
-          state.theme_song = nil
+        # init fanfare state on first pass
+        state.fanfare ||= open_struct(
+          theme_song: true,
+          t: 0,
+          line1: nil,
+          line2: nil,
+          fighter_visible: false,
+        )
+
+        # title progression during theme song
+        ff = state.fanfare
+        case ff.t
+        when 0..4
+          ff.line1 = "PLAYER #{state.player.num}"
+          ff.line2 = nil
+          update_stars(state.stars, 0, input)
+        when 4..6.5
+          ff.line1 = "PLAYER #{state.player.num}"
+          ff.line2 = "STAGE #{state.stage}"
+          ff.fighter_visible = true
+          update_player(state.player, input)
+          update_stars(state.stars, state.player.cruising.speed, input)
+          state.player.weapons_hot = false
+        when 6.5..7
+          state.fanfare = nil
           state.screen = :battle
-          state.player.cruising.speed = StarSpeed
+          state.player.weapons_hot = true
         end
-        update_stars(state.stars, StarSpeed, input)
+        ff.t += input.time.dt
       when :stage_open
       when :battle
         update_collisions state
@@ -196,8 +221,8 @@ module Galaga
       case state.phase
       when :title
         placeholder = lambda do |words|
-          draw_text g, words, 0, 4, Blue
-          draw_text g, "#{(state.screen_countdown || 0).round(1)}", 24, 4, White
+          g << text(words, 0, 4, Blue)
+          g << text("#{(state.screen_countdown || 0).round(1)}", 24, 4, White)
         end
         case state.screen
         when :instructions
@@ -224,11 +249,21 @@ module Galaga
       when :gameplay
         case state.screen
         when :fanfare
-          if state.theme_song
-            g << Sound::Effect.new(name: "theme_song")
+          ff = state.fanfare
+          if ff
+            g << Sound::Effect.new(name: "theme_song") if ff.theme_song
+            g << text(ff.line1, 8.2, 11, Cyan) if ff.line1
+            g << text(ff.line2, 8, 12.5, Cyan) if ff.line2
+            if ff.fighter_visible
+              draw_player g, state.player
+              draw_hud_ships g, state.hud
+            else
+              draw_hud_credits g, state.hud
+            end
+          else
+            draw_hud_credits g, state.hud
           end
           draw_hud_scores g, state.hud
-          draw_hud_credits g, state.hud
         when :stage_open
         when :battle
           draw_player g, state.player
@@ -250,12 +285,13 @@ module Galaga
   Red = Gosu::Color::RED
   Blue = Gosu::Color::BLUE
   White = Gosu::Color::WHITE
+  Cyan = Gosu::Color::CYAN
 
-  def draw_text(g, text, charx, chary, color)
+  def text(txt, charx, chary, color)
     x = charx * FontWidth
     y = chary * FontHeight
     z = Layer.text
-    g << Draw::Label.new(text: text, x: x, y: y, z: z, color: color, font: "retrogame")
+    Draw::Label.new(text: txt, x: x, y: y, z: z, color: color, font: "retrogame")
   end
 
   def draw_start_info(g)

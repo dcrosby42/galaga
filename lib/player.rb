@@ -6,6 +6,7 @@ module Galaga
       total_ships: 3,
       active_ships: 1,
       mode: :active,
+      weapons_hot: false,
       pos: { x: 100, y: Height - FooterHeight - FighterHeight },
       cruising: {
         mode: :cruising,
@@ -39,7 +40,7 @@ module Galaga
       end
 
       if input.keyboard.pressed?(Fire1Button)
-        if player.missiles.length < MissileFireLimit
+        if player.weapons_hot and player.missiles.length < MissileFireLimit
           # Fire missile
           player.missiles_fired += 1
           missile = open_struct(
