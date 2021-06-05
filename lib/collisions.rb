@@ -21,10 +21,21 @@ module Galaga
     state.enemy_fleet.enemies.each do |enemy|
       if enemy.mode == :active
         if rect_overlap(enemy.hit_box, state.player.hit_box)
-          if enemy.collisions.length == 0 && state.player.collisions.length == 0
+          if enemy.collisions.length == 0 && state.player.mode == :active && state.player.collisions.length == 0
             enemy.collisions << state.player
             state.player.collisions << enemy
           end
+        end
+      end
+    end
+    # Enemy missiles v player
+    player = state.player
+    state.enemy_fleet.enemies.each do |enemy|
+      enemy.missiles.each do |missile|
+        if player.mode == :active and point_in_rect(missile.pos, player.hit_box)
+          # HIT!
+          player.collisions << missile
+          missile.collisions << player
         end
       end
     end

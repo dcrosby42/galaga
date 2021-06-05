@@ -11,6 +11,7 @@ module Galaga
   DebugPlayerToggle = Gosu::KB_F2
   DebugEnemyToggle = Gosu::KB_F3
   PauseToggle = Gosu::KB_P
+  SoundToggle = Gosu::KB_M
 
   # Game dimensions
   Scale = 3
@@ -26,6 +27,8 @@ module Galaga
   FighterHeight = 16
   MissileSpeed = 350
   MissileFireLimit = 2
+  EnemyMissileSpeed = 200
+  EnemyFireLimit = 3
 
   FontWidth = 8.5 # "retrogame" fixed with font char width
   FontHeight = 10 # "retrogame" fixed with font char height
@@ -49,7 +52,7 @@ require "hud"
 require "collisions"
 
 module Galaga
-  Cedar::Sound.on = true
+  Cedar::Sound.on = false
   Cedar::Sound.debug = false
 
   def resource_config
@@ -72,6 +75,7 @@ module Galaga
       player: new_player,
       enemy_fleet: nil,
 
+      scale: Scale,
       paused: false,
     })
     state
@@ -137,7 +141,8 @@ module Galaga
           # state.player = new_player
           state.enemy_fleet = new_enemy_fleet
           state.phase = :gameplay
-          state.screen = :fanfare
+          # state.screen = :fanfare
+          state.screen = :battle # TODO DELETEME, revert to :fanfare
         end
       end
     when :gameplay
@@ -170,11 +175,11 @@ module Galaga
         when 6.5..7
           state.fanfare = nil
           state.screen = :battle
-          state.player.weapons_hot = true
         end
         ff.t += input.time.dt
       when :stage_open
       when :battle
+        state.player.weapons_hot = true
         update_collisions state
         update_player state.player, input
         update_enemy_fleet state.enemy_fleet, input
@@ -200,6 +205,10 @@ module Galaga
   end
 
   def update_dev_controls(state, input)
+    if input.keyboard.pressed?(SoundToggle)
+      Cedar::Sound.on = !Cedar::Sound.on
+      puts "Cedar::Sound.on = #{Cedar::Sound.on}"
+    end
     if input.keyboard.pressed?(PauseToggle)
       state.paused = !state.paused
     end
@@ -212,10 +221,18 @@ module Galaga
     if input.keyboard.pressed?(DebugEnemyToggle)
       state.enemy_fleet.debug = !state.enemy_fleet.debug
     end
+
+    if input.keyboard.pressed?(Gosu::KB_EQUALS)
+      state.scale += 1
+    end
+    if input.keyboard.pressed?(Gosu::KB_MINUS)
+      state.scale -= 1
+      state.scale = 1 if state.scale < 1
+    end
   end
 
   def draw(state, output, res)
-    output.graphics << Draw::Scale.new(Scale) do |g|
+    output.graphics << Draw::Scale.new(state.scale) do |g|
       draw_stars g, state.stars
 
       case state.phase

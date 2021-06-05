@@ -20,7 +20,7 @@ module Galaga
       star_seed: star_seed,
       sparse: 2, # star sparsity (every n lines should be drawn)
       blink_rate: 1.5,
-      blink_chance: 0.16,
+      blink_chance: 0.4,
       debug: false,
     }
   end
@@ -52,7 +52,7 @@ module Galaga
       rng = Cedar::Prng.new(seed)
       # Iterate downward, drawing the stars:
       page_start = stars.bounds.top + (pg * page_height) - stars.loc # y pos of the top of this star page
-      (page_height / stars.sparse).times do |i|
+      (page_height / stars.sparse.to_f).to_i.times do |i|
         y = page_start + (stars.sparse * i)
         x = rng.int(stars.bounds.left, stars.bounds.right)
         color = rng.choose(StarColors)

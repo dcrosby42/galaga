@@ -21,6 +21,9 @@ module Galaga
       pos: { x: 0, y: 0 },
       hit_box: { x: 0, y: 0, w: 11, h: 10 },
       collisions: [],
+      fire_timer: 1.0,
+      missiles_fired: 0,
+      missiles: [],
     )
   end
 
@@ -50,6 +53,18 @@ module Galaga
       end
 
       if enemy.mode == :active
+        enemy.fire_timer -= input.time.dt
+        if enemy.fire_timer <= 0
+          enemy.fire_timer = 1.0
+          enemy.missiles_fired += 1
+          missile = open_struct(
+            id: enemy.missiles_fired,
+            pos: { x: enemy.pos.x, y: enemy.pos.y },
+            vel: { x: 0, y: MissileSpeed },
+            collisions: [],
+          )
+          enemy.missiles << missile
+        end
         enemy.pos.y += 1
         if enemy.pos.y > Height
           enemy.pos.y = 0
@@ -58,6 +73,8 @@ module Galaga
         # update hitbox location
         enemy.hit_box.x = enemy.pos.x - 5
         enemy.hit_box.y = enemy.pos.y - 5
+
+        update_missiles enemy.missiles, input
       elsif enemy.mode == :explode
         if !enemy.explosion
           # start the explosion
@@ -87,6 +104,28 @@ module Galaga
     end
   end
 
+  def update_missiles(missiles, input)
+    removals = nil
+    missiles.each.with_index do |missile, i|
+      if missile.collisions.length > 0
+        # missile hit something
+        removals ||= []
+        removals << i
+      else
+        missile.pos.y += missile.vel.y * input.time.dt
+        missile.pos.x += missile.vel.x * input.time.dt
+        if missile.pos.y < HeaderHeight || missile.pos.y > Height
+          # missile out of range; mark for deletion
+          removals ||= []
+          removals << i
+        end
+      end
+    end
+    removals && removals.each do |i|
+      missiles.delete_at i
+    end
+  end
+
   def draw_enemy_fleet(g, fleet)
     fleet.enemies.each do |enemy|
       draw_enemy g, fleet, enemy
@@ -108,6 +147,23 @@ module Galaga
 
         g << Draw::Rect.new(x: x, y: y, z: z, color: c)
         g << Draw::RectOutline.new(x: enemy.hit_box.x, y: enemy.hit_box.y, w: enemy.hit_box.w, h: enemy.hit_box.h, z: z, color: c)
+      end
+
+      enemy.missiles.each do |missile|
+        g << Draw::Sprite.new(
+          name: "bad_missile",
+          x: missile.pos.x, y: missile.pos.y, z: Layer.player_missiles,
+        )
+
+        #g << Sound::Effect.new(name: "pew", id: missile.id)
+
+        if fleet.debug
+          x = missile.pos.x
+          y = missile.pos.y
+          z = Layer.player_debug
+          c = Gosu::Color::YELLOW
+          g << Draw::Rect.new(x: x, y: y, z: z, w: 1, h: 1, color: c)
+        end
       end
     elsif enemy.mode == :explode
       g << Draw::Animation.new(name: "enemy_splode", t: enemy.explosion.t, x: enemy.pos.x, y: enemy.pos.y)
