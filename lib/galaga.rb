@@ -137,6 +137,7 @@ module Galaga
         # Wait for P1 start button:
         if input.keyboard.pressed?(Gosu::KB_1)
           state.credits -= 1
+          state.player = new_player
           state.stage = 1
           # state.player = new_player
           state.enemy_fleet = new_enemy_fleet
@@ -184,12 +185,51 @@ module Galaga
         update_player state.player, input
         update_enemy_fleet state.enemy_fleet, input
         update_stars(state.stars, state.player.cruising.speed, input)
+        if state.player.mode == :explode
+          state.screen = :death
+        end
       when :death
+        update_player state.player, input
+        update_enemy_fleet state.enemy_fleet, input
+        update_stars(state.stars, state.player.cruising.speed, input)
+
+        state.death_stranding ||= 0
+        case state.death_stranding
+        when 0..3
+        when 3..4
+          state.death_stranding = nil
+          if state.player.total_ships > 0
+            state.screen = :battle
+            revive_player state.player
+          else
+            state.phase = :epilogue
+            state.screen = nil
+          end
+        end
+        state.death_stranding += input.time.dt if state.death_stranding
       end
     when :epilogue
+      state.screen ||= :game_over
       # The epilogue phase is post-gameplay: gameover, stats, maybe entering a new high score.
       case state.screen
       when :game_over
+        state.game_over_timer ||= 0
+        case state.game_over_timer
+        when 0..5
+        when 5..6
+          state.game_over_timer = nil
+          state.phase = nil
+          state.screen = nil
+          # state.death_stranding = nil
+          # if state.player.total_ships > 0
+          #   state.screen = :battle
+          #   revive_player state.player
+          # else
+          #   state.phase = :epilogue
+          #   state.screen = nil
+          # end
+        end
+        state.game_over_timer += input.time.dt if state.game_over_timer
       when :new_high_score
       end
     end
@@ -282,17 +322,19 @@ module Galaga
           end
           draw_hud_scores g, state.hud
         when :stage_open
-        when :battle
+        when :battle, :death
           draw_player g, state.player
           draw_enemy_fleet g, state.enemy_fleet
           draw_hud_scores g, state.hud
           draw_hud_ships g, state.hud
           draw_hud_stages g, state.hud
-        when :death
         end
       when :epilogue
         case state.screen
         when :game_over
+          draw_hud_scores g, state.hud
+          draw_hud_credits g, state.hud
+          g << text("GAME OVER", 8.2, 11, Red)
         when :new_high_score
         end
       end

@@ -1,13 +1,15 @@
 module Galaga
+  PlayerStartX = 100
+
   def new_player
-    {
+    open_struct({
       num: 1,
       score: 0,
       total_ships: 3,
       active_ships: 1,
       mode: :active,
       weapons_hot: false,
-      pos: { x: 100, y: Height - FooterHeight - FighterHeight },
+      pos: { x: PlayerStartX, y: Height - FooterHeight - FighterHeight },
       cruising: {
         mode: :cruising,
         speed: 0,
@@ -17,12 +19,27 @@ module Galaga
       missiles: [],
       collisions: [],
       debug: false,
-    }
+    })
+  end
+
+  def kill_player(player)
+    player.mode = :explode
+    player.cruising.mode = :stopping
+    player.active_ships = 0
+    player.total_ships -= 1
+  end
+
+  def revive_player(player)
+    player.explosion = nil
+    player.mode = :active
+    player.cruising.mode = :cruising
+    player.active_ships = 1
+    player.pos.x = PlayerStartX
   end
 
   def update_player(player, input)
-    if !player.collisions.empty?
-      player.mode = :explode
+    if player.mode == :active && !player.collisions.empty?
+      kill_player player
     end
 
     if player.mode == :active
@@ -56,12 +73,11 @@ module Galaga
       if !player.explosion
         # start the explosion
         player.explosion = open_struct(t: 0, limit: 1)
-        player.cruising.mode = :stopping
       else
         # update the explosion
         player.explosion.t += input.time.dt
         if player.explosion.t >= player.explosion.limit
-          player.remove = true
+          # ?
         end
       end
     end
