@@ -9,6 +9,14 @@ Lifecycle of the game
 5. Win? next stage
 6. Lose? Game over!
 
+
+ISSUES
+
+- Enemy missiles need sound?
+- Enemy is able to kill reviving player by firing missile at death position at just the right moment before revival
+- 
+
+
 --
 
 Add credit 

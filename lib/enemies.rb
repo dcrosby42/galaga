@@ -9,6 +9,7 @@ module Galaga
       ],
       spawned: false,
       enemies: [],
+      defeated: false,
       debug: false,
     })
   end
@@ -101,6 +102,7 @@ module Galaga
       to_remove.each do |i|
         fleet.enemies.delete_at(i)
       end
+      fleet.defeated = fleet.enemies.empty?
     end
   end
 

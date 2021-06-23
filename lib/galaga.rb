@@ -179,6 +179,7 @@ module Galaga
         end
         ff.t += input.time.dt
       when :stage_open
+        # HERE
       when :battle
         state.player.weapons_hot = true
         update_collisions state
@@ -187,6 +188,9 @@ module Galaga
         update_stars(state.stars, state.player.cruising.speed, input)
         if state.player.mode == :explode
           state.screen = :death
+        elsif state.enemy_fleet.defeated
+          puts "Fleet defeated"
+          state.screen = :stage_open
         end
       when :death
         update_player state.player, input
