@@ -139,11 +139,10 @@ module Galaga
           state.credits -= 1
           state.player = new_player
           state.stage = 1
-          # state.player = new_player
           state.enemy_fleet = new_enemy_fleet
           state.phase = :gameplay
-          # state.screen = :fanfare
-          state.screen = :battle # TODO DELETEME, revert to :fanfare
+          state.screen = :fanfare
+          #state.screen = :battle # TODO DELETEME, revert to :fanfare
         end
       end
     when :gameplay
@@ -179,7 +178,20 @@ module Galaga
         end
         ff.t += input.time.dt
       when :stage_open
-        # HERE
+        state.stage_opening ||= open_struct(
+          t: 0,
+          line1: "STAGE #{state.stage}",
+        )
+        stage_opening = state.stage_opening
+        case stage_opening.t
+        when 0..2
+        when 2..4
+          stage_opening.line1 = "STAGE #{state.stage}"
+        when 4..6
+          state.stage_opening = nil
+          state.screen = :battle
+        end
+        stage_opening.t += input.time.dt
       when :battle
         state.player.weapons_hot = true
         update_collisions state
@@ -279,6 +291,9 @@ module Galaga
     output.graphics << Draw::Scale.new(state.scale) do |g|
       draw_stars g, state.stars
 
+      g << text(state.phase, 16, 27, Blue)
+      g << text(state.screen, 16, 28, Green)
+
       case state.phase
       when :title
         placeholder = lambda do |words|
@@ -326,6 +341,11 @@ module Galaga
           end
           draw_hud_scores g, state.hud
         when :stage_open
+          draw_player g, state.player
+          draw_enemy_fleet g, state.enemy_fleet
+          draw_hud_scores g, state.hud
+          draw_hud_ships g, state.hud
+          draw_hud_stages g, state.hud
         when :battle, :death
           draw_player g, state.player
           draw_enemy_fleet g, state.enemy_fleet
@@ -347,6 +367,7 @@ module Galaga
 
   Red = Gosu::Color::RED
   Blue = Gosu::Color::BLUE
+  Green = Gosu::Color::GREEN
   White = Gosu::Color::WHITE
   Cyan = Gosu::Color::CYAN
 
