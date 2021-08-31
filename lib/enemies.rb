@@ -35,7 +35,7 @@ module Galaga
       grid_w = 16
       grid_h = 16
       fx = 16
-      fy = HeaderHeight + 16
+      fy = 0 # HeaderHeight + 16
 
       fleet.ships.each.with_index do |(type, row, col), i|
         e = new_enemy
@@ -80,7 +80,7 @@ module Galaga
         if !enemy.explosion
           # start the explosion
           # enemy.explosion = open_struct(t: 0, limit: 1.0 / 24 * 5) # ~ four (+1 extra, for safety) frames @ 24 fps
-          enemy.explosion = open_struct(t: 0, limit: 1) # ~ four (+1 extra, for safety) frames @ 24 fps
+          enemy.explosion = open_struct(t: 0, limit: (1.0 / 24) * 7) # ~ four (+1 extra, for safety) frames @ 24 fps
         else
           # update the explosion
           enemy.explosion.t += input.time.dt

@@ -1,5 +1,6 @@
 module Galaga
   PlayerStartX = 100
+  PlayerGodMode = false
 
   def new_player
     open_struct({
@@ -18,6 +19,7 @@ module Galaga
       missiles_fired: 0,
       missiles: [],
       collisions: [],
+      invincible: PlayerGodMode,
       debug: false,
     })
   end
@@ -39,7 +41,7 @@ module Galaga
 
   def update_player(player, input)
     if player.mode == :active && !player.collisions.empty?
-      kill_player player
+      kill_player player unless player.invincible
     end
 
     if player.mode == :active

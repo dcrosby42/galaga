@@ -10,6 +10,7 @@ module Galaga
   DebugStarsToggle = Gosu::KB_F1
   DebugPlayerToggle = Gosu::KB_F2
   DebugEnemyToggle = Gosu::KB_F3
+  DebugPhaseToggle = Gosu::KB_F4
   PauseToggle = Gosu::KB_P
   SoundToggle = Gosu::KB_M
 
@@ -52,8 +53,9 @@ require "hud"
 require "collisions"
 
 module Galaga
-  Cedar::Sound.on = false
+  Cedar::Sound.on = true
   Cedar::Sound.debug = false
+  PlayerGodMode = false
 
   def resource_config
     "resources.json"
@@ -77,6 +79,7 @@ module Galaga
 
       scale: Scale,
       paused: false,
+      debug_phase: false,
     })
     state
   end
@@ -142,7 +145,7 @@ module Galaga
           state.enemy_fleet = new_enemy_fleet
           state.phase = :gameplay
           state.screen = :fanfare
-          #state.screen = :battle # TODO DELETEME, revert to :fanfare
+          # state.screen = :battle # TODO DELETEME, revert to :fanfare
         end
       end
     when :gameplay
@@ -178,17 +181,19 @@ module Galaga
         end
         ff.t += input.time.dt
       when :stage_open
-        state.stage_opening ||= open_struct(
-          t: 0,
-          line1: "STAGE #{state.stage}",
-        )
+        update_stars(state.stars, state.player.cruising.speed, input)
+        update_player state.player, input
         stage_opening = state.stage_opening
         case stage_opening.t
-        when 0..2
-        when 2..4
+        when 0..(1.5)
+          stage_opening.line1 = ""
+        when (1.5)..(3.5)
+          state.stage = stage_opening.next_stage
           stage_opening.line1 = "STAGE #{state.stage}"
-        when 4..6
+        else
+          stage_opening.line1 = ""
           state.stage_opening = nil
+          state.enemy_fleet = new_enemy_fleet
           state.screen = :battle
         end
         stage_opening.t += input.time.dt
@@ -202,6 +207,11 @@ module Galaga
           state.screen = :death
         elsif state.enemy_fleet.defeated
           puts "Fleet defeated"
+          state.stage_opening ||= open_struct(
+            t: 0,
+            # line1: "STAGE #{state.stage}",
+            next_stage: state.stage + 1,
+          )
           state.screen = :stage_open
         end
       when :death
@@ -277,6 +287,9 @@ module Galaga
     if input.keyboard.pressed?(DebugEnemyToggle)
       state.enemy_fleet.debug = !state.enemy_fleet.debug
     end
+    if input.keyboard.pressed?(DebugPhaseToggle)
+      state.debug_phase = !state.debug_phase
+    end
 
     if input.keyboard.pressed?(Gosu::KB_EQUALS)
       state.scale += 1
@@ -291,8 +304,10 @@ module Galaga
     output.graphics << Draw::Scale.new(state.scale) do |g|
       draw_stars g, state.stars
 
-      g << text(state.phase, 16, 27, Blue)
-      g << text(state.screen, 16, 28, Green)
+      if state.debug_phase
+        g << text(state.phase, 16, 27, Blue)
+        g << text(state.screen, 16, 28, Green)
+      end
 
       case state.phase
       when :title
@@ -346,6 +361,9 @@ module Galaga
           draw_hud_scores g, state.hud
           draw_hud_ships g, state.hud
           draw_hud_stages g, state.hud
+
+          so = state.stage_opening
+          g << text(so.line1, 8.2, 11, Cyan) if so.line1
         when :battle, :death
           draw_player g, state.player
           draw_enemy_fleet g, state.enemy_fleet
