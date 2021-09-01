@@ -1,110 +1,109 @@
-[
-  {
-    "type": "image_sprite",
-    "name": "fighter",
-    "image": "fighter_01.png"
-  },
-  {
-    "type": "image_sprite",
-    "name": "missile",
-    "image": "missile_01.png",
-    "center_x": 0.5,
-    "center_y": 0
-  },
-  {
-    "type": "image_sprite",
-    "name": "bad_missile",
-    "image": "enemy_missile.png",
-    "center_x": 0.3,
-    "center_y": 0.9
-  },
-  {
-    "type": "font",
-    "name": "retrogame",
-    "font": "narpassword.ttf",
-    "size": 10
-  },
-  {
-    "type": "font",
-    "name": "default",
-    "size": 10
-  },
-  {
-    "type": "grid_sheet_sprite",
-    "name": "enemy1",
-    "image": "enemy_01.png",
-    "center_x": 0.5,
-    "center_y": 0.5,
-    "grid": {
-      "w": 16,
-      "h": 16,
-      "count": 8
+[{
+        "name": "fighter",
+        "type": "image_sprite",
+        "image": "fighter_01.png"
+    },
+    {
+        "name": "missile",
+        "type": "image_sprite",
+        "image": "missile_01.png",
+        "center_x": 0.5,
+        "center_y": 0
+    },
+    {
+        "name": "bad_missile",
+        "type": "image_sprite",
+        "image": "enemy_missile.png",
+        "center_x": 0.3,
+        "center_y": 0.9
+    },
+    {
+        "name": "retrogame",
+        "type": "font",
+        "font": "narpassword.ttf",
+        "size": 10
+    },
+    {
+        "name": "default",
+        "type": "font",
+        "size": 10
+    },
+    {
+        "name": "enemy1",
+        "type": "grid_sheet_sprite",
+        "image": "enemy_01.png",
+        "center_x": 0.5,
+        "center_y": 0.5,
+        "grid": {
+            "w": 16,
+            "h": 16,
+            "count": 8
+        }
+    },
+    {
+        "name": "enemy_splode",
+        "type": "grid_sheet_sprite",
+        "image": "enemy_splode.png",
+        "grid": {
+            "w": 32,
+            "h": 32,
+            "count": 5
+        },
+        "center_x": 0.5,
+        "center_y": 0.5
+    },
+    {
+        "name": "player_splode",
+        "type": "grid_sheet_sprite",
+        "image": "fighter_boom.png",
+        "grid": {
+            "w": 32,
+            "h": 32,
+            "count": 4
+        },
+        "center_x": 0.5,
+        "center_y": 0.5
+    },
+    {
+        "name": "enemy_splode",
+        "type": "sprite_animation",
+        "sprite": "enemy_splode",
+        "fps": 24
+    },
+    {
+        "name": "player_splode",
+        "type": "sprite_animation",
+        "sprite": "player_splode",
+        "fps": 5
+    },
+    {
+        "name": "pew",
+        "type": "sound",
+        "sound": "fire.wav",
+        "volume": 0.5
+    },
+    {
+        "name": "boom",
+        "type": "sound",
+        "sound": "boom.wav",
+        "volume": 0.5
+    },
+    {
+        "name": "waka",
+        "type": "sound",
+        "sound": "enemy_hit_01.wav",
+        "volume": 0.5
+    },
+    {
+        "name": "theme_song",
+        "type": "sound",
+        "sound": "start_song.wav",
+        "volume": 0.5
+    },
+    {
+        "name": "credit_added",
+        "type": "sound",
+        "sound": "credit.wav",
+        "volume": 0.5
     }
-  },
-  {
-    "type": "grid_sheet_sprite",
-    "name": "enemy_splode",
-    "image": "enemy_splode.png",
-    "grid": {
-      "w": 32,
-      "h": 32,
-      "count": 5
-    },
-    "center_x": 0.5,
-    "center_y": 0.5
-  },
-  {
-    "type": "grid_sheet_sprite",
-    "name": "player_splode",
-    "image": "fighter_boom.png",
-    "grid": {
-      "w": 32,
-      "h": 32,
-      "count": 4
-    },
-    "center_x": 0.5,
-    "center_y": 0.5
-  },
-  {
-    "type": "sprite_animation",
-    "name": "enemy_splode",
-    "sprite": "enemy_splode",
-    "fps": 24
-  },
-  {
-    "type": "sprite_animation",
-    "name": "player_splode",
-    "sprite": "player_splode",
-    "fps": 5
-  },
-  {
-    "type": "sound",
-    "name": "pew",
-    "sound": "fire.wav",
-    "volume": 0.5
-  },
-  {
-    "type": "sound",
-    "name": "boom",
-    "sound": "boom.wav",
-    "volume": 0.5
-  },
-  {
-    "type": "sound",
-    "name": "waka",
-    "sound": "enemy_hit_01.wav",
-    "volume": 0.5
-  },
-  {
-    "type": "sound",
-    "name": "theme_song",
-    "sound": "start_song.wav",
-    "volume": 0.5
-  },
-  {
-    "type": "sound",
-    "name": "credit_added",
-    "sound": "credit.wav",
-    "volume": 0.5
-  }
 ]
