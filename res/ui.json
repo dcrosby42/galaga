@@ -1,0 +1,24 @@
+[{
+        "type": "font",
+        "name": "retrogame",
+        "font": "narpassword.ttf",
+        "size": 10
+    },
+    {
+        "type": "font",
+        "name": "default",
+        "size": 10
+    },
+    {
+        "type": "sound",
+        "name": "theme_song",
+        "sound": "start_song.wav",
+        "volume": 0.5
+    },
+    {
+        "type": "sound",
+        "name": "credit_added",
+        "sound": "credit.wav",
+        "volume": 0.5
+    }
+]

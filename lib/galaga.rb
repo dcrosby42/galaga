@@ -53,12 +53,17 @@ require "hud"
 require "collisions"
 
 module Galaga
-  Cedar::Sound.on = true
+  Cedar::Sound.on = false
   Cedar::Sound.debug = false
-  PlayerGodMode = false
+  SkipFanfare = true
+  PlayerGodMode = true
 
   def resource_config
-    "resources.json"
+    [
+      "ui.json",
+      "player.json",
+      "enemies/enemies.json",
+    ]
   end
 
   def new_state
@@ -144,8 +149,11 @@ module Galaga
           state.stage = 1
           state.enemy_fleet = new_enemy_fleet
           state.phase = :gameplay
-          state.screen = :fanfare
-          # state.screen = :battle # TODO DELETEME, revert to :fanfare
+          if SkipFanfare
+            state.screen = :battle
+          else
+            state.screen = :fanfare
+          end
         end
       end
     when :gameplay

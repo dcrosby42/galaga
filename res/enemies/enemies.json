@@ -1,0 +1,44 @@
+[{
+        "type": "image_sprite",
+        "name": "bad_missile",
+        "image": "enemies/enemy_missile.png",
+        "center_x": 0.3,
+        "center_y": 0.9
+    },
+    {
+        "type": "grid_sheet_sprite",
+        "name": "enemy1",
+        "image": "enemies/enemy_01.png",
+        "center_x": 0.5,
+        "center_y": 0.5,
+        "grid": {
+            "w": 16,
+            "h": 16,
+            "count": 8
+        }
+    },
+    {
+        "type": "grid_sheet_sprite",
+        "name": "enemy_splode",
+        "image": "enemies/enemy_splode.png",
+        "grid": {
+            "w": 32,
+            "h": 32,
+            "count": 5
+        },
+        "center_x": 0.5,
+        "center_y": 0.5
+    },
+    {
+        "type": "sprite_animation",
+        "name": "enemy_splode",
+        "sprite": "enemy_splode",
+        "fps": 24
+    },
+    {
+        "type": "sound",
+        "name": "waka",
+        "sound": "enemies/enemy_hit_01.wav",
+        "volume": 0.5
+    }
+]

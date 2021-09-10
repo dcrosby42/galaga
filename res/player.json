@@ -1,0 +1,43 @@
+[{
+        "type": "image_sprite",
+        "name": "fighter",
+        "image": "fighter_01.png"
+    },
+    {
+        "type": "image_sprite",
+        "name": "missile",
+        "image": "missile_01.png",
+        "center_x": 0.5,
+        "center_y": 0
+    },
+    {
+        "type": "grid_sheet_sprite",
+        "name": "player_splode",
+        "image": "fighter_boom.png",
+        "grid": {
+            "w": 32,
+            "h": 32,
+            "count": 4
+        },
+        "center_x": 0.5,
+        "center_y": 0.5
+    },
+    {
+        "type": "sprite_animation",
+        "name": "player_splode",
+        "sprite": "player_splode",
+        "fps": 5
+    },
+    {
+        "type": "sound",
+        "name": "pew",
+        "sound": "fire.wav",
+        "volume": 0.5
+    },
+    {
+        "type": "sound",
+        "name": "boom",
+        "sound": "boom.wav",
+        "volume": 0.5
+    }
+]
