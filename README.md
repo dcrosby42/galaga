@@ -8,7 +8,20 @@ bundle install
 rake
 ```
 
-## Tutorial
+**Controls:**
+
+- `5` - insert coin
+- `1` - begin 1 player game
+- `Left` `Right` - move ship
+- `q` - fire missile
+- `p` - pause
+- `Alt-r` - hot-reload updated code
+- `Shift-r` - reset game state
+- `F1` - `F4` - toggle debug drawing
+
+
+
+## Code Tutorial
 
 Ok, major TBD obviously. The writings are naught but terse reminders of waypoints.
 
