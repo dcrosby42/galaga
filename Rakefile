@@ -8,6 +8,11 @@ task :run do
   exec "bundle exec ruby main.rb"
 end
 
+desc "Dev"
+task :dev do
+  exec "bundle exec ruby dev.rb"
+end
+
 desc "Console prompt"
 task :console do
   exec "bundle exec ruby console.rb"
@@ -17,7 +22,7 @@ desc "Render diagrams"
 task :diagrams do
   type = ENV["TYPE"] || "svg"
   Dir["*.dot"].each do |fname|
-    %x{cat #{fname} | docker run --rm -i nshine/dot dot -T#{type} > #{File.basename(fname,".dot")}.#{type}}
+    %x{cat #{fname} | docker run --rm -i nshine/dot dot -T#{type} > #{File.basename(fname, ".dot")}.#{type}}
   end
 end
 
